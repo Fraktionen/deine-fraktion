@@ -291,10 +291,10 @@
         <h1 class="auth-title" id="authFactionTitle">La Muerta Show</h1>
         <div class="auth-sub">Nur der Einstieg ist neu. Nach dem Login bleibt die Seite gleich.</div>
         <div class="auth-mini-grid">
-          <div class="auth-mini"><strong>Fraktions Login</strong><span>Ein gemeinsamer Zugang für die ganze Fraktion.</span></div>
-          <div class="auth-mini"><strong>Admin Login</strong><span>Im Panel selbst wie vorher für die Verwaltung.</span></div>
-          <div class="auth-mini"><strong>Owner Login</strong><span>Klein oben rechts nur für dich.</span></div>
-          <div class="auth-mini"><strong>Gleiches Interface</strong><span>Nach dem Login kommt deine alte Oberfläche.</span></div>
+          <div class="auth-mini"><strong>Updates</strong><span>Farben, Ränge, Webhooks und Oberfläche wurden überarbeitet.</span></div>
+          <div class="auth-mini"><strong>Neuerungen</strong><span>Umfragen, Rangsystem und Bereiche wurden erweitert.</span></div>
+          <div class="auth-mini"><strong>Status</strong><span>Die Seite wird laufend angepasst und verbessert.</span></div>
+          <div class="auth-mini"><strong>Hinweis</strong><span>Neue Funktionen und Änderungen siehst du hier direkt beim Start.</span></div>
         </div>
       </div>
       <div class="auth-panel auth-right">
@@ -395,51 +395,37 @@
       return slugify(base);
     }
 
-    function getScopedKey(name){
-      return `${STORAGE_PREFIX}_${getFactionScope()}_${name}`;
-    }
+    function getScopedKey(name){ return `${STORAGE_PREFIX}_${getFactionScope()}_${name}`; }
+    function getUiKey(name){ return `${GLOBAL_UI_KEY}_${name}`; }
+    function getWebhookKey(){ return `${WEBHOOKS_KEY_PREFIX}_${getFactionScope()}`; }
+    function getRanksKey(){ return `${RANKS_KEY_PREFIX}_${getFactionScope()}`; }
+    function getPollWebhookStateKey(){ return getScopedKey('poll_webhook_state'); }
 
-    function getUiKey(name){
-      return `${GLOBAL_UI_KEY}_${name}`;
+    function loadPollWebhookState(){
+      try { return JSON.parse(localStorage.getItem(getPollWebhookStateKey()) || '{}'); }
+      catch { return {}; }
     }
-
-    function getWebhookKey(){
-      return `${WEBHOOKS_KEY_PREFIX}_${getFactionScope()}`;
-    }
-
-    function getRanksKey(){
-      return `${RANKS_KEY_PREFIX}_${getFactionScope()}`;
-    }
+    function savePollWebhookState(data){ localStorage.setItem(getPollWebhookStateKey(), JSON.stringify(data || {})); }
+    function clearPollWebhookState(){ localStorage.removeItem(getPollWebhookStateKey()); }
 
     function getDefaultRanks(){
       return Array.from({ length: 12 }, (_, index) => ({ id: String(index + 1), name: `${index + 1}er` }));
     }
-
     function loadRankConfig(){
       try {
         const raw = JSON.parse(localStorage.getItem(getRanksKey()) || 'null');
         if(Array.isArray(raw) && raw.length){
           rankConfig = raw.map((rank, index) => ({ id: String(rank.id || index + 1), name: String(rank.name || `${index + 1}er`) }));
-        } else {
-          rankConfig = getDefaultRanks();
-        }
+        } else rankConfig = getDefaultRanks();
       } catch {
         rankConfig = getDefaultRanks();
       }
     }
-
-    function saveRankConfig(){
-      localStorage.setItem(getRanksKey(), JSON.stringify(rankConfig));
-    }
-
-    function getRankName(rankId){
-      const found = rankConfig.find(rank => String(rank.id) === String(rankId));
-      return found ? found.name : `${rankId}er`;
-    }
+    function saveRankConfig(){ localStorage.setItem(getRanksKey(), JSON.stringify(rankConfig)); }
+    function getRankName(rankId){ const found = rankConfig.find(rank => String(rank.id) === String(rankId)); return found ? found.name : `${rankId}er`; }
 
     function refreshRankSelects(){
-      const selects = ['memberRank', 'newRankSelect'];
-      selects.forEach(selectId => {
+      ['memberRank', 'newRankSelect'].forEach(selectId => {
         const select = $(selectId);
         if(!select) return;
         const currentValue = select.value;
@@ -448,52 +434,17 @@
         else if(rankConfig[0]) select.value = rankConfig[0].id;
       });
     }
-
     function renderRankSettings(){
       const wrap = $('rankSettingsList');
       if(!wrap) return;
-      wrap.innerHTML = rankConfig.map(rank => `
-        <div class="log-item">
-          <div class="field" style="margin:0;">
-            <label>${rank.id}er</label>
-            <input type="text" data-rank-input="${rank.id}" value="${rank.name}">
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function getPollWebhookStateKey(){
-      return getScopedKey('poll_webhook_state');
-    }
-
-    function loadPollWebhookState(){
-      try {
-        return JSON.parse(localStorage.getItem(getPollWebhookStateKey()) || '{}');
-      } catch {
-        return {};
-      }
-    }
-
-    function savePollWebhookState(data){
-      localStorage.setItem(getPollWebhookStateKey(), JSON.stringify(data || {}));
-    }
-
-    function clearPollWebhookState(){
-      localStorage.removeItem(getPollWebhookStateKey());
+      wrap.innerHTML = rankConfig.map(rank => `<div class="log-item"><div class="field" style="margin:0;"><label>${rank.id}er</label><input type="text" data-rank-input="${rank.id}" value="${rank.name}"></div></div>`).join('');
     }
 
     function loadWebhooks(){
-      try {
-        return JSON.parse(localStorage.getItem(getWebhookKey()) || '{}');
-      } catch {
-        return {};
-      }
+      try { return JSON.parse(localStorage.getItem(getWebhookKey()) || '{}'); }
+      catch { return {}; }
     }
-
-    function saveWebhooks(data){
-      localStorage.setItem(getWebhookKey(), JSON.stringify(data || {}));
-    }
-
+    function saveWebhooks(data){ localStorage.setItem(getWebhookKey(), JSON.stringify(data || {})); }
     function fillWebhookInputs(){
       const hooks = loadWebhooks();
       if($('webhookPoll')) $('webhookPoll').value = hooks.poll || '';
@@ -501,47 +452,25 @@
       if($('webhookWarn')) $('webhookWarn').value = hooks.warn || '';
       if($('webhookLog')) $('webhookLog').value = hooks.log || '';
     }
-
-    function getWebhookColor(type){
-      const map = {
-        poll: 10181046,
-        sanktion: 15158332,
-        warn: 15844367,
-        log: 3447003
-      };
-      return map[type] || 15548997;
-    }
-
+    function getWebhookColor(type){ return ({ poll: 10181046, sanktion: 15158332, warn: 15844367, log: 3447003 })[type] || 15548997; }
     function buildWebhookPayload(type, title, description, fields = []){
       return {
         username: factionLogin.factionName || 'Fraktion',
         embeds: [{
-          title,
-          description,
-          color: getWebhookColor(type),
+          title, description, color: getWebhookColor(type),
           author: { name: factionLogin.factionName || 'Fraktion' },
           footer: { text: `Bereich: ${type}` },
           timestamp: new Date().toISOString(),
-          fields: fields.filter(Boolean).map(field => ({
-            name: String(field.name || 'Info').slice(0, 256),
-            value: String(field.value || '-').slice(0, 1024),
-            inline: !!field.inline
-          }))
+          fields: fields.filter(Boolean).map(field => ({ name: String(field.name || 'Info').slice(0,256), value: String(field.value || '-').slice(0,1024), inline: !!field.inline }))
         }]
       };
     }
-
     async function sendWebhookEmbed(type, title, description, fields = []){
       const hooks = loadWebhooks();
       const url = String(hooks[type] || '').trim();
       if(!url) return { ok:false, reason:'missing_url' };
-
       try {
-        const response = await fetch(`${url}${url.includes('?') ? '&' : '?'}wait=true`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(buildWebhookPayload(type, title, description, fields))
-        });
+        const response = await fetch(`${url}${url.includes('?') ? '&' : '?'}wait=true`, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(buildWebhookPayload(type, title, description, fields)) });
         if(!response.ok) return { ok:false, reason:`http_${response.status}` };
         const data = await response.json().catch(() => null);
         return { ok:true, data };
@@ -550,18 +479,12 @@
         return { ok:false, reason:String(error) };
       }
     }
-
     async function editWebhookEmbed(type, messageId, title, description, fields = []){
       const hooks = loadWebhooks();
       const url = String(hooks[type] || '').trim();
       if(!url || !messageId) return { ok:false, reason:'missing_data' };
-
       try {
-        const response = await fetch(`${url}/messages/${messageId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(buildWebhookPayload(type, title, description, fields))
-        });
+        const response = await fetch(`${url}/messages/${messageId}`, { method:'PATCH', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(buildWebhookPayload(type, title, description, fields)) });
         if(!response.ok) return { ok:false, reason:`http_${response.status}` };
         const data = await response.json().catch(() => null);
         return { ok:true, data };
@@ -570,38 +493,25 @@
         return { ok:false, reason:String(error) };
       }
     }
-
     async function deleteWebhookMessage(type, messageId){
       const hooks = loadWebhooks();
       const url = String(hooks[type] || '').trim();
       if(!url || !messageId) return false;
-      try {
-        const response = await fetch(`${url}/messages/${messageId}`, { method:'DELETE' });
-        return response.ok;
-      } catch (error) {
-        console.error('Webhook Löschfehler', error);
-        return false;
-      }
+      try { const response = await fetch(`${url}/messages/${messageId}`, { method:'DELETE' }); return response.ok; }
+      catch (error) { console.error('Webhook Löschfehler', error); return false; }
     }
-
     async function syncActivePollWebhook(actionLabel = 'Umfrage Update'){
       const poll = state.polls.find(p => p.active);
       if(!poll) return false;
-
       const yesVotes = Object.values(poll.votes || {}).filter(v => v.choice === 'yes');
       const noVotes = Object.values(poll.votes || {}).filter(v => v.choice === 'no');
-      const yesCount = yesVotes.length;
-      const noCount = noVotes.length;
-      const voterListYes = yesVotes.map(v => v.name).join(', ') || 'Niemand';
-      const voterListNo = noVotes.map(v => v.name).join(', ') || 'Niemand';
       const fields = [
         { name:'Info', value: poll.description || '-', inline:false },
-        { name:'Ja', value: String(yesCount), inline:true },
-        { name:'Nein', value: String(noCount), inline:true },
-        { name:'Ja Stimmen', value: voterListYes, inline:false },
-        { name:'Nein Stimmen', value: voterListNo, inline:false }
+        { name:'Ja', value: String(yesVotes.length), inline:true },
+        { name:'Nein', value: String(noVotes.length), inline:true },
+        { name:'Ja Stimmen', value: yesVotes.map(v => v.name).join(', ') || 'Niemand', inline:false },
+        { name:'Nein Stimmen', value: noVotes.map(v => v.name).join(', ') || 'Niemand', inline:false }
       ];
-
       const pollWebhookState = loadPollWebhookState();
       if(pollWebhookState.pollId === poll.id && pollWebhookState.messageId){
         const edited = await editWebhookEmbed('poll', pollWebhookState.messageId, actionLabel, poll.title, fields);
@@ -609,71 +519,35 @@
         await deleteWebhookMessage('poll', pollWebhookState.messageId);
         clearPollWebhookState();
       }
-
       const created = await sendWebhookEmbed('poll', actionLabel, poll.title, fields);
-      if(created.ok && created.data?.id){
-        savePollWebhookState({ pollId: poll.id, messageId: created.data.id });
-        return true;
-      }
+      if(created.ok && created.data?.id){ savePollWebhookState({ pollId: poll.id, messageId: created.data.id }); return true; }
       return false;
     }
 
-    function hexToRgb(hex){
-      const cleaned = String(hex).replace('#','');
-      const full = cleaned.length === 3 ? cleaned.split('').map(c => c + c).join('') : cleaned;
-      const num = parseInt(full, 16);
-      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
-    }
+    function hexToRgb(hex){ const cleaned = String(hex).replace('#',''); const full = cleaned.length === 3 ? cleaned.split('').map(c => c + c).join('') : cleaned; const num = parseInt(full, 16); return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 }; }
+    function rgbToHex(r, g, b){ return '#' + [r,g,b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join(''); }
+    function shadeColor(hex, factor){ const { r,g,b } = hexToRgb(hex); return rgbToHex(r * factor, g * factor, b * factor); }
+    function lightenColor(hex, amount){ const { r,g,b } = hexToRgb(hex); return rgbToHex(r + (255-r)*amount, g + (255-g)*amount, b + (255-b)*amount); }
 
-    function rgbToHex(r, g, b){
-      return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
-    }
-
-    function shadeColor(hex, factor){
-      const { r, g, b } = hexToRgb(hex);
-      return rgbToHex(r * factor, g * factor, b * factor);
-    }
-
-    function lightenColor(hex, amount){
-      const { r, g, b } = hexToRgb(hex);
-      return rgbToHex(r + (255 - r) * amount, g + (255 - g) * amount, b + (255 - b) * amount);
-    }
-
-    function defaultAdminAccounts(){
-      return [
-        { username: 'meteB', password: '2121', displayName: 'meteB' },
-        { username: 'paco1', password: '2122', displayName: 'paco1' }
-      ];
-    }
+    function defaultAdminAccounts(){ return [{ username:'meteB', password:'2121', displayName:'meteB' }, { username:'paco1', password:'2122', displayName:'paco1' }]; }
 
     function saveState(){ localStorage.setItem(getScopedKey('state'), JSON.stringify(state)); }
-    function loadState(){ const raw = localStorage.getItem(getScopedKey('state')); if(raw){ try{ state = JSON.parse(raw);}catch{} } }
+    function loadState(){ const raw = localStorage.getItem(getScopedKey('state')); if(raw){ try{ state = JSON.parse(raw); } catch{} } }
     function saveAdmin(){ if(currentAdmin) localStorage.setItem(getScopedKey('admin_session'), JSON.stringify(currentAdmin)); else localStorage.removeItem(getScopedKey('admin_session')); }
-    function loadAdmin(){ const raw = localStorage.getItem(getScopedKey('admin_session')); if(raw){ try{ currentAdmin = JSON.parse(raw);}catch{} } else currentAdmin = null; }
+    function loadAdmin(){ const raw = localStorage.getItem(getScopedKey('admin_session')); if(raw){ try{ currentAdmin = JSON.parse(raw); } catch{} } else currentAdmin = null; }
     function saveAdminAccounts(){ localStorage.setItem(getScopedKey('admin_accounts'), JSON.stringify(adminAccounts)); }
     function loadAdminAccounts(){
       const raw = localStorage.getItem(getScopedKey('admin_accounts'));
-      if(raw){
-        try{ adminAccounts = JSON.parse(raw); }
-        catch { adminAccounts = defaultAdminAccounts(); }
-      } else {
-        adminAccounts = defaultAdminAccounts();
-        saveAdminAccounts();
-      }
+      if(raw){ try{ adminAccounts = JSON.parse(raw); } catch { adminAccounts = defaultAdminAccounts(); } }
+      else { adminAccounts = defaultAdminAccounts(); saveAdminAccounts(); }
     }
     function saveRoutePassword(){ localStorage.setItem(getScopedKey('route_pw'), routeAccessCode); }
     function loadRoutePassword(){ routeAccessCode = localStorage.getItem(getScopedKey('route_pw')) || '4747'; }
     function saveRouteEntries(entries){ localStorage.setItem(getScopedKey('route_entries'), JSON.stringify(entries)); }
     function loadRouteEntries(){ return JSON.parse(localStorage.getItem(getScopedKey('route_entries')) || '[]'); }
 
-    function loadOwnerAndFaction(){
-      const o = localStorage.getItem(OWNER_KEY); if(o){ try{ ownerConfig = JSON.parse(o);}catch{} }
-      const f = localStorage.getItem(FACTION_LOGIN_KEY); if(f){ try{ factionLogin = JSON.parse(f);}catch{} }
-    }
-    function saveOwnerAndFaction(){
-      localStorage.setItem(OWNER_KEY, JSON.stringify(ownerConfig));
-      localStorage.setItem(FACTION_LOGIN_KEY, JSON.stringify(factionLogin));
-    }
+    function loadOwnerAndFaction(){ const o = localStorage.getItem(OWNER_KEY); if(o){ try{ ownerConfig = JSON.parse(o); } catch{} } const f = localStorage.getItem(FACTION_LOGIN_KEY); if(f){ try{ factionLogin = JSON.parse(f); } catch{} } }
+    function saveOwnerAndFaction(){ localStorage.setItem(OWNER_KEY, JSON.stringify(ownerConfig)); localStorage.setItem(FACTION_LOGIN_KEY, JSON.stringify(factionLogin)); }
     function isFactionLoggedIn(){ return localStorage.getItem(getScopedKey('faction_session')) === '1'; }
     function setFactionLoggedIn(v){ if(v) localStorage.setItem(getScopedKey('faction_session'),'1'); else localStorage.removeItem(getScopedKey('faction_session')); }
     function todayText(){ const n=new Date(); return n.toLocaleDateString('de-DE')+' '+n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}); }
@@ -685,15 +559,19 @@
     function closeModal(id){ const el=$(id); if(el) el.classList.remove('show'); }
     function setShown(id, shown){ const el=$(id); if(el) el.classList.toggle('hidden', !shown); }
     function toast(title,text,type='info'){ const wrap=$('toastWrap'); const node=document.createElement('div'); node.className='toast '+type; node.innerHTML=`<div class="toast-title">${title}</div><div class="toast-text">${text}</div>`; wrap.appendChild(node); setTimeout(()=>node.remove(),3000); }
-    function addLog(text){
-      state.logs.unshift({text,date:todayText()});
-      state.logs=state.logs.slice(0,120);
-      saveState();
-      renderLogs();
-      sendWebhookEmbed('log','Neuer Log Eintrag',text,[
-        { name:'Zeit', value: todayText(), inline:true },
-        { name:'Fraktion', value: factionLogin.factionName || 'Unbekannt', inline:true }
-      ]);
+    function addLog(text){ state.logs.unshift({text,date:todayText()}); state.logs=state.logs.slice(0,120); saveState(); renderLogs(); sendWebhookEmbed('log','Neuer Log Eintrag',text,[{ name:'Zeit', value: todayText(), inline:true },{ name:'Fraktion', value: factionLogin.factionName || 'Unbekannt', inline:true }]); }
+
+    function ensureFactionDefaults(){
+      if(!Array.isArray(state.members)) state.members = [];
+      if(!Array.isArray(state.chat)) state.chat = [];
+      if(!Array.isArray(state.logs)) state.logs = [];
+      if(!Array.isArray(state.polls)) state.polls = [];
+      if(typeof state.currentWeek !== 'number') state.currentWeek = 12;
+      if(!state.filter) state.filter = 'all';
+      if(!state.abgabeFilter) state.abgabeFilter = 'all';
+      if(typeof state.memberSearch !== 'string') state.memberSearch = '';
+      if(typeof state.abgabeSearch !== 'string') state.abgabeSearch = '';
+      if(typeof state.routesUnlocked !== 'boolean') state.routesUnlocked = false;
     }
 
     function updateFactionBranding(){
@@ -705,7 +583,6 @@
       $('ownerFactionName').value=name;
       $('ownerFactionUser').value=factionLogin.username||'';
       $('ownerFactionPass').value=factionLogin.password||'';
-
       const chosenFont=localStorage.getItem(getUiKey(`${getFactionScope()}_font_family`)) || 'Cinzel';
       const chosenColor=localStorage.getItem(getUiKey(`${getFactionScope()}_brand_color`)) || '#d23434';
       const fontMap={Cinzel:`'Cinzel', serif`,Inter:`'Inter', sans-serif`,Georgia:'Georgia, serif',Arial:'Arial, sans-serif'};
@@ -713,25 +590,14 @@
       document.documentElement.style.setProperty('--red', chosenColor);
       document.documentElement.style.setProperty('--red-dark', shadeColor(chosenColor, 0.78));
       document.documentElement.style.setProperty('--red-soft', lightenColor(chosenColor, 0.18));
-
       if($('settingsFactionName')) $('settingsFactionName').value=name;
       if($('settingsFontFamily')) $('settingsFontFamily').value=chosenFont;
       if($('settingsFactionColor')) $('settingsFactionColor').value=chosenColor;
       fillWebhookInputs();
     }
 
-    function loadFactionData(){
-      loadState();
-      loadAdmin();
-      loadAdminAccounts();
-      loadRoutePassword();
-      loadRankConfig();
-    }
-
-    function ensureFactionDefaults(){
-      if(!state.members.length) seed();
-    }
-
+    function loadFactionData(){ loadState(); loadAdmin(); loadAdminAccounts(); loadRoutePassword(); loadRankConfig(); ensureFactionDefaults(); }
+    function seed(){ if(!state.members.length && !state.logs.length && !state.chat.length && !state.polls.length) saveState(); }
     function updateGateUi(){ const logged=isFactionLoggedIn(); $('authScreen').classList.toggle('hidden',logged); $('appShell').classList.toggle('hidden',!logged); updateFactionBranding(); }
     function updateAdminUi(){
       const admin=isAdmin();
@@ -742,17 +608,7 @@
       $('loginStatus').textContent=admin?`Eingeloggt als ${currentAdmin.displayName}`:'Nicht eingeloggt';
     }
 
-    function factionLoginSubmit(){
-      const u=$('factionUsername').value.trim();
-      const p=$('factionPassword').value.trim();
-      if(u!==factionLogin.username || p!==factionLogin.password) return toast('Login fehlgeschlagen','Fraktions-Benutzername oder Passwort stimmt nicht.','error');
-      loadFactionData();
-      ensureFactionDefaults();
-      setFactionLoggedIn(true);
-      updateGateUi();
-      renderAll();
-      toast('Fraktion eingeloggt','Die bekannte Oberfläche wurde geöffnet.','success');
-    }
+    function factionLoginSubmit(){ const u=$('factionUsername').value.trim(); const p=$('factionPassword').value.trim(); if(u!==factionLogin.username || p!==factionLogin.password) return toast('Login fehlgeschlagen','Fraktions-Benutzername oder Passwort stimmt nicht.','error'); loadFactionData(); setFactionLoggedIn(true); updateGateUi(); renderAll(); toast('Fraktion eingeloggt','Die Oberfläche wurde geöffnet.','success'); }
     function factionLogout(){ setFactionLoggedIn(false); currentAdmin=null; saveAdmin(); updateGateUi(); updateAdminUi(); toast('Fraktion ausgeloggt','Du bist zurück beim Einstieg.','info'); }
     function ownerLoginSubmit(){ const u=$('ownerUsername').value.trim(); const p=$('ownerPassword').value.trim(); if(u!==ownerConfig.username || p!==ownerConfig.password) return toast('Owner Login fehlgeschlagen','Benutzername oder Passwort stimmt nicht.','error'); closeModal('ownerLoginModal'); openModal('ownerPanelModal'); }
     function saveOwnerSettings(){
@@ -762,23 +618,13 @@
       factionLogin.username=$('ownerFactionUser').value.trim()||factionLogin.username;
       factionLogin.password=$('ownerFactionPass').value.trim()||factionLogin.password;
       saveOwnerAndFaction();
-
       const newScope = getFactionScope();
       if(oldScope !== newScope){
         state={members:[],chat:[],logs:[],polls:[],currentWeek:12,filter:'all',abgabeFilter:'all',memberSearch:'',abgabeSearch:'',routesUnlocked:false};
-        currentAdmin=null;
-        clearPollWebhookState();
-        loadFactionData();
-        ensureFactionDefaults();
-        saveAdmin();
-      } else if(oldName!==factionLogin.factionName){
-        saveState();
-      }
-
-      updateFactionBranding();
-      renderAll();
-      closeModal('ownerPanelModal');
-      toast('Gespeichert', oldScope !== newScope ? 'Neue Fraktion angelegt. Admins, Daten und Routen laufen jetzt getrennt pro Fraktion.' : 'Fraktions Login und Name wurden gespeichert.','success');
+        currentAdmin=null; clearPollWebhookState(); loadFactionData(); ensureFactionDefaults(); saveAdmin(); saveState();
+      } else if(oldName!==factionLogin.factionName){ saveState(); }
+      updateFactionBranding(); renderAll(); closeModal('ownerPanelModal');
+      toast('Gespeichert', oldScope !== newScope ? 'Neue Fraktion angelegt. Sie startet leer.' : 'Fraktions Login und Name wurden gespeichert.','success');
     }
     function loginAdmin(){ const u=$('loginUsername').value.trim(); const p=$('loginPassword').value.trim(); const found=adminAccounts.find(a=>a.username===u&&a.password===p); if(!found) return toast('Login fehlgeschlagen','Benutzername oder Passwort stimmt nicht.','error'); currentAdmin=found; saveAdmin(); updateAdminUi(); closeModal('loginModal'); $('loginUsername').value=''; $('loginPassword').value=''; toast('Willkommen',`Willkommen ${found.displayName}`,'success'); }
     function logoutAdmin(){ currentAdmin=null; saveAdmin(); updateAdminUi(); toast('Logout','Du wurdest ausgeloggt.','info'); }
@@ -821,7 +667,6 @@
     function changeRoutePassword(){ if(!requireAdmin()) return; const pw=$('newRoutePassword').value.trim(); if(!pw) return toast('Fehlende Daten','Bitte ein neues Passwort eingeben.','error'); routeAccessCode=pw; saveRoutePassword(); $('newRoutePassword').value=''; addLog(`${currentAdmin.displayName} hat das Routen-Passwort geändert.`); toast('Passwort geändert','Das neue Routen-Passwort wurde gespeichert.','success'); }
     function addRouteEntry(){ if(!requireAdmin()) return; const folder=$('routeFolderName').value.trim(), entry=$('routeEntryName').value.trim(); if(!folder||!entry) return toast('Fehlende Daten','Bitte Ordner Name und Eintrag ausfüllen.','error'); const routes=loadRouteEntries(); routes.push({folder,entry}); saveRouteEntries(routes); $('routeFolderName').value=''; $('routeEntryName').value=''; renderRouteEntries(); toast('Route gespeichert','Der Routen Eintrag wurde gespeichert.','success'); }
     function renderAll(){ refreshRankSelects(); renderRankSettings(); renderDashboard(); renderAbgabe(); renderChat(); renderLogs(); renderPollBanner(); renderPollResults(); updateRouteAccessUi(); updateAdminUi(); updateFactionBranding(); saveState(); }
-    function seed(){ if(state.members.length) return; state.members=[{ id:'m1', rank:'1', icName:'Seroo Show', discordName:'seroshow', discordId:'100000000000000001', abmeldeCode:'4317', status:'Aktiv', abmeldung:null, warns:[], sanktionen:[], notes:'', abgabe:{ kw_12:{ by:'meteB', date:todayText() } }, createdBy:'meteB' },{ id:'m2', rank:'2', icName:'Yavuz ackermann', discordName:'sezeroz', discordId:'100000000000000002', abmeldeCode:'2251', status:'Aktiv', abmeldung:null, warns:[], sanktionen:[], notes:'', abgabe:{}, createdBy:'meteB' },{ id:'m3', rank:'2', icName:'Mr, kato', discordName:'kato.offiziell', discordId:'100000000000000003', abmeldeCode:'5319', status:'Aktiv', abmeldung:null, warns:[], sanktionen:[], notes:'', abgabe:{}, createdBy:'meteB' },{ id:'m4', rank:'3', icName:'Mete Blunt', discordName:'hamsterkilll', discordId:'100000000000000004', abmeldeCode:'1234', status:'Abgemeldet', abmeldung:{ reason:'bis', untilDate:'29/03', untilTime:'18:00' }, warns:[], sanktionen:[], notes:'', abgabe:{}, createdBy:'meteB' },{ id:'m5', rank:'3', icName:'Maurice Reacher', discordName:'maurice200_10', discordId:'100000000000000005', abmeldeCode:'8841', status:'Aktiv', abmeldung:null, warns:[], sanktionen:[], notes:'', abgabe:{}, createdBy:'meteB' }]; state.logs=[{ text:'Startdaten wurden geladen.', date:todayText() }]; saveState(); }
     function switchPage(name){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); $(`page-${name}`).classList.add('active'); document.querySelector(`.nav-btn[data-page="${name}"]`)?.classList.add('active'); }
     function openSettingsTab(tab){ document.querySelectorAll('.settings-tab').forEach(p=>p.classList.add('hidden')); const panel=$(`settings-tab-${tab}`); if(panel) panel.classList.remove('hidden'); document.querySelectorAll('[data-settings-tab]').forEach(btn=>btn.classList.toggle('active', btn.dataset.settingsTab===tab)); }
 
@@ -867,69 +712,16 @@
     $('openOwnerLoginBtn').addEventListener('click',()=>openModal('ownerLoginModal'));
     $('ownerLoginSubmitBtn').addEventListener('click',ownerLoginSubmit);
     $('saveOwnerSettingsBtn').addEventListener('click',saveOwnerSettings);
-    $('createAdminAccountBtn').addEventListener('click',()=>{
-      if(!requireAdmin()) return;
-      const confirmName=$('confirmAdminName').value.trim(), confirmPassword=$('confirmAdminPassword').value.trim();
-      const creator=adminAccounts.find(a=>a.username===confirmName&&a.password===confirmPassword);
-      if(!creator) return toast('Bestätigung fehlgeschlagen','Dein Admin Name oder Passwort stimmt nicht.','error');
-      const newName=$('newAdminName').value.trim(), newPassword=$('newAdminPassword').value.trim();
-      if(!newName||!newPassword) return toast('Fehlende Daten','Bitte neuen Admin Namen und Passwort eintragen.','error');
-      if(adminAccounts.some(a=>a.username===newName)) return toast('Name vergeben','Dieser Admin Name existiert bereits.','error');
-      adminAccounts.push({username:newName,password:newPassword,displayName:newName});
-      saveAdminAccounts();
-      $('confirmAdminName').value=''; $('confirmAdminPassword').value=''; $('newAdminName').value=''; $('newAdminPassword').value='';
-      renderAdminAccounts();
-      toast('Admin erstellt','Der neue Admin Account wurde nur für diese Fraktion gespeichert.','success');
-    });
-    $('saveFactionLookBtn').addEventListener('click',()=>{
-      if(!requireAdmin()) return;
-      const newFactionName=$('settingsFactionName').value.trim(), fontValue=$('settingsFontFamily').value, colorValue=$('settingsFactionColor').value;
-      if(newFactionName) factionLogin.factionName=newFactionName;
-      localStorage.setItem(getUiKey(`${getFactionScope()}_font_family`), fontValue);
-      localStorage.setItem(getUiKey(`${getFactionScope()}_brand_color`), colorValue);
-      saveOwnerAndFaction();
-      updateFactionBranding();
-      toast('Gespeichert','Fraktionsname, Farbe und Schriftart wurden gespeichert.','success');
-    });
-    $('saveRankSettingsBtn').addEventListener('click',()=>{
-      if(!requireAdmin()) return;
-      const nextRanks = rankConfig.map(rank => {
-        const input = document.querySelector(`[data-rank-input="${rank.id}"]`);
-        return { id: rank.id, name: (input?.value || `${rank.id}er`).trim() || `${rank.id}er` };
-      });
-      rankConfig = nextRanks;
-      saveRankConfig();
-      refreshRankSelects();
-      renderRankSettings();
-      renderAll();
-      toast('Gespeichert','Die Rangnamen wurden gespeichert.','success');
-    });
-    $('saveWebhookSettingsBtn').addEventListener('click',async ()=>{
-      if(!requireAdmin()) return;
-      saveWebhooks({
-        poll: $('webhookPoll').value.trim(),
-        sanktion: $('webhookSanktion').value.trim(),
-        warn: $('webhookWarn').value.trim(),
-        log: $('webhookLog').value.trim()
-      });
-      const result = await sendWebhookEmbed('log','Webhook verbunden','Der Log Webhook wurde gespeichert und getestet.',[
-        { name:'Fraktion', value:factionLogin.factionName || 'Unbekannt', inline:true }
-      ]);
-      toast('Gespeichert', result.ok ? 'Webhooks gespeichert. Test wurde abgeschickt.' : 'Webhooks gespeichert, aber der Test konnte nicht gesendet werden.', result.ok ? 'success' : 'error');
-    });
-    $('testWebhookBtn').addEventListener('click',async ()=>{
-      if(!requireAdmin()) return;
-      const result = await sendWebhookEmbed('log','Test Embed','Das ist ein manueller Test vom Log Webhook.',[
-        { name:'Fraktion', value:factionLogin.factionName || 'Unbekannt', inline:true },
-        { name:'Zeit', value:todayText(), inline:true }
-      ]);
-      toast(result.ok ? 'Test gesendet' : 'Test fehlgeschlagen', result.ok ? 'Wenn dein Webhook korrekt ist, sollte jetzt ein Embed in Discord auftauchen.' : 'Der Test konnte nicht gesendet werden. Prüfe den Link.', result.ok ? 'success' : 'error');
-    });
+    $('createAdminAccountBtn').addEventListener('click',()=>{ if(!requireAdmin()) return; const confirmName=$('confirmAdminName').value.trim(), confirmPassword=$('confirmAdminPassword').value.trim(); const creator=adminAccounts.find(a=>a.username===confirmName&&a.password===confirmPassword); if(!creator) return toast('Bestätigung fehlgeschlagen','Dein Admin Name oder Passwort stimmt nicht.','error'); const newName=$('newAdminName').value.trim(), newPassword=$('newAdminPassword').value.trim(); if(!newName||!newPassword) return toast('Fehlende Daten','Bitte neuen Admin Namen und Passwort eintragen.','error'); if(adminAccounts.some(a=>a.username===newName)) return toast('Name vergeben','Dieser Admin Name existiert bereits.','error'); adminAccounts.push({username:newName,password:newPassword,displayName:newName}); saveAdminAccounts(); $('confirmAdminName').value=''; $('confirmAdminPassword').value=''; $('newAdminName').value=''; $('newAdminPassword').value=''; renderAdminAccounts(); toast('Admin erstellt','Der neue Admin Account wurde nur für diese Fraktion gespeichert.','success'); });
+    $('saveFactionLookBtn').addEventListener('click',()=>{ if(!requireAdmin()) return; const newFactionName=$('settingsFactionName').value.trim(), fontValue=$('settingsFontFamily').value, colorValue=$('settingsFactionColor').value; if(newFactionName) factionLogin.factionName=newFactionName; localStorage.setItem(getUiKey(`${getFactionScope()}_font_family`), fontValue); localStorage.setItem(getUiKey(`${getFactionScope()}_brand_color`), colorValue); saveOwnerAndFaction(); updateFactionBranding(); toast('Gespeichert','Fraktionsname, Farbe und Schriftart wurden gespeichert.','success'); });
+    $('saveRankSettingsBtn').addEventListener('click',()=>{ if(!requireAdmin()) return; rankConfig = rankConfig.map(rank => { const input = document.querySelector(`[data-rank-input="${rank.id}"]`); return { id: rank.id, name: (input?.value || `${rank.id}er`).trim() || `${rank.id}er` }; }); saveRankConfig(); renderAll(); toast('Gespeichert','Die Rangnamen wurden gespeichert.','success'); });
+    $('saveWebhookSettingsBtn').addEventListener('click',async ()=>{ if(!requireAdmin()) return; saveWebhooks({ poll: $('webhookPoll').value.trim(), sanktion: $('webhookSanktion').value.trim(), warn: $('webhookWarn').value.trim(), log: $('webhookLog').value.trim() }); const result = await sendWebhookEmbed('log','Webhook verbunden','Der Log Webhook wurde gespeichert und getestet.',[{ name:'Fraktion', value:factionLogin.factionName || 'Unbekannt', inline:true }]); toast('Gespeichert', result.ok ? 'Webhooks gespeichert. Test wurde abgeschickt.' : 'Webhooks gespeichert, aber der Test konnte nicht gesendet werden.', result.ok ? 'success' : 'error'); });
+    $('testWebhookBtn').addEventListener('click',async ()=>{ if(!requireAdmin()) return; const result = await sendWebhookEmbed('log','Test Embed','Das ist ein manueller Test vom Log Webhook.',[{ name:'Fraktion', value:factionLogin.factionName || 'Unbekannt', inline:true },{ name:'Zeit', value:todayText(), inline:true }]); toast(result.ok ? 'Test gesendet' : 'Test fehlgeschlagen', result.ok ? 'Wenn dein Webhook korrekt ist, sollte jetzt ein Embed in Discord auftauchen.' : 'Der Test konnte nicht gesendet werden. Prüfe den Link.', result.ok ? 'success' : 'error'); });
     $('factionLoginBtn').addEventListener('click',factionLoginSubmit);
 
     loadOwnerAndFaction();
     loadFactionData();
-    ensureFactionDefaults();
+    seed();
     updateGateUi();
     openSettingsTab('logs');
     renderAll();
