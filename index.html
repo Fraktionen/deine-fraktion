@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La Muerta Show</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --bg: #06060a;
+      --panel: #0d0d14;
+      --panel-2: #12121b;
+      --text: #f5f2f6;
+      --muted: #91899d;
+      --line: rgba(255,255,255,.07);
+      --red: #d23434;
+      --red-dark: #a92222;
+      --red-soft: #ef4e4e;
+      --green: #46d17f;
+      --blue: #6da7ff;
+      --yellow: #ecb14a;
+      --shadow: 0 24px 70px rgba(0,0,0,.42);
+      --title-font: 'Cinzel', serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--red) 12%, transparent), transparent 25%),
+        linear-gradient(180deg, rgba(8,8,12,.98), rgba(5,5,8,.99)),
+        #050508;
+    }
+    button,input,select,textarea { font: inherit; }
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      color-scheme: dark;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #d8d1dc 50%),
+        linear-gradient(135deg, #d8d1dc 50%, transparent 50%);
+      background-position:
+        calc(100% - 22px) calc(50% - 3px),
+        calc(100% - 16px) calc(50% - 3px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 42px !important;
+    }
+    select option {
+      background: #12121b;
+      color: #f5f2f6;
+    }
+    select option:checked {
+      background: color-mix(in srgb, var(--red) 70%, #12121b);
+      color: #ffffff;
+    }
+    .hidden { display: none !important; }
+
+    .field label {
+      display: block;
+      margin-bottom: 9px;
+      color: #d8d1dc;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .9px;
+      text-transform: uppercase;
+    }
+    .field input,.field select,.field textarea {
+      width: 100%;
+      color: #f7f3f8;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 15px 16px;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 12px 28px rgba(0,0,0,.16);
+      transition: .18s ease;
+    }
+    .field input::placeholder,.field textarea::placeholder { color: #938a9d; }
+    .field input:focus,.field select:focus,.field textarea:focus {
+      border-color: color-mix(in srgb, var(--red-soft) 45%, transparent);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.035));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 4px color-mix(in srgb, var(--red) 10%, transparent), 0 18px 36px rgba(0,0,0,.22);
+      transform: translateY(-1px);
+    }
+
+    .auth-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .auth-wrap {
+      width: min(1120px, 100%);
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+    .auth-panel, .panel {
+      background: linear-gradient(180deg, rgba(13,13,20,.96), rgba(8,8,13,.96));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+    .auth-left { position: relative; padding: 34px; overflow: hidden; }
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, color-mix(in srgb, var(--red) 14%, transparent), transparent 30%);
+      pointer-events: none;
+    }
+    .owner-login-link { position: absolute; top: 18px; right: 18px; z-index: 2; }
+    .auth-logo {
+      width: 64px; height: 64px; border-radius: 18px;
+      display: grid; place-items: center;
+      background: linear-gradient(180deg, var(--red-soft), var(--red-dark));
+      color: white; font-family: var(--title-font); font-size: 28px; font-weight: 800;
+      margin-bottom: 20px; overflow: hidden;
+    }
+    .auth-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .auth-title { margin: 0 0 10px; font-family: var(--title-font); font-size: 40px; line-height: 1; color: var(--red-soft); }
+    .auth-sub { color: #b6afbf; line-height: 1.7; margin-bottom: 24px; max-width: 620px; }
+    .auth-mini-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .auth-mini { padding: 14px; border-radius: 18px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05); }
+    .auth-mini strong { display: block; margin-bottom: 6px; }
+    .auth-mini span { color: var(--muted); font-size: 14px; }
+    .auth-right { padding: 30px; }
+    .auth-right h2 { margin: 0 0 8px; font-family: var(--title-font); font-size: 30px; color: var(--red-soft); }
+    .auth-right p { margin: 0 0 20px; color: #b6afbf; line-height: 1.65; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 18px;
+      background: rgba(7,7,11,.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: linear-gradient(180deg, var(--red-soft), var(--red-dark));
+      display: grid; place-items: center; font-weight: 800; color: white; overflow: hidden;
+    }
+    .logo img { width: 100%; height: 100%; object-fit: cover; }
+    .brand-title { font-family: var(--title-font); color: var(--red-soft); font-size: 24px; letter-spacing: 1.5px; line-height: 1; }
+
+    .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nav-btn,.ghost-btn,.solid-btn,.chip,.mini-btn,.react-btn {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
+      color: #ece8ef;
+      cursor: pointer;
+      transition: .18s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .nav-btn:hover,.ghost-btn:hover,.solid-btn:hover,.chip:hover,.mini-btn:hover,.react-btn:hover { transform: translateY(-1px); }
+    .nav-btn { padding: 10px 14px; }
+    .nav-btn.active { background: rgba(255,255,255,.07); }
+    .ghost-btn,.solid-btn { padding: 10px 14px; }
+    .solid-btn.red { background: linear-gradient(180deg, var(--red-soft), var(--red-dark)); border-color: transparent; color: white; }
+    .solid-btn.green { background: rgba(70,209,127,.14); color: #7df0a7; border-color: rgba(70,209,127,.2); }
+    .ghost-btn.blue { background: rgba(109,167,255,.11); color: #95bfff; border-color: rgba(109,167,255,.2); }
+    .mini-btn.danger,.ghost-btn.danger { background: rgba(210,52,52,.12); color: #ff8a8a; border-color: rgba(210,52,52,.22); }
+
+    .searchbar {
+      display: flex; align-items: center; gap: 10px; padding: 13px 15px;
+      border: 1px solid rgba(255,255,255,.09); border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+      width: 100%; max-width: 460px; justify-self: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .searchbar input { width: 100%; background: transparent; border: 0; outline: none; color: white; }
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .login-status { font-size: 13px; color: var(--muted); }
+
+    .main { max-width: 1720px; margin: 0 auto; padding: 16px 18px 70px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .hero-wrap { display: grid; grid-template-columns: 1.2fr auto; gap: 16px; margin-bottom: 16px; }
+    .hero { padding: 20px; }
+    .hero h2 { margin: 0 0 8px; font-family: var(--title-font); font-size: 34px; }
+    .hero p { margin: 0; color: #b6afbf; }
+    .stats { padding: 16px; display: grid; grid-template-columns: repeat(4, minmax(110px,1fr)); gap: 12px; }
+    .stat-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05); border-radius: 18px; padding: 14px; }
+    .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 800; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip { padding: 9px 12px; border-radius: 999px; }
+    .chip.active { background: color-mix(in srgb, var(--red) 12%, transparent); color: #ff8585; border-color: color-mix(in srgb, var(--red) 22%, transparent); }
+    .poll-banner { padding: 16px; margin-bottom: 16px; }
+    .poll-banner-title { font-family: var(--title-font); font-size: 22px; margin-bottom: 8px; }
+    .poll-banner-text { color: #b5aebe; margin-bottom: 12px; }
+    .section { margin-bottom: 18px; }
+    .section-head { display: flex; align-items: center; gap: 10px; padding: 0 4px 12px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+    .rank-pill { min-width: 34px; height: 34px; padding: 0 8px; border-radius: 10px; background: linear-gradient(180deg, var(--red-soft), var(--red-dark)); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+    .section-title { font-family: var(--title-font); font-size: 20px; }
+    .count-badge { min-width: 26px; height: 26px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); color: var(--muted); font-size: 12px; }
+    .cards { display: flex; gap: 14px; flex-wrap: wrap; }
+    .member-card { width: 200px; min-height: 164px; background: linear-gradient(180deg, rgba(18,18,28,.96), rgba(12,12,20,.98)); border: 1px solid rgba(255,255,255,.06); border-radius: 20px; padding: 14px; cursor: pointer; transition: .2s ease; }
+    .member-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--red-soft) 24%, transparent); }
+    .card-avatar { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(180deg, rgba(53,27,37,.9), rgba(22,22,30,.9)); border: 1px solid rgba(255,255,255,.07); color: var(--red-soft); font-weight: 800; font-size: 18px; margin-bottom: 14px; }
+    .card-name { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .card-discord { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .status-tag,.warn-tag,.small-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; border: 1px solid transparent; }
+    .status-tag.active,.small-status.active { background: rgba(70,209,127,.14); color: #64e492; border-color: rgba(70,209,127,.18); }
+    .status-tag.away,.small-status.away { background: rgba(210,52,52,.14); color: #ff7b7b; border-color: rgba(210,52,52,.18); }
+    .warn-tag { background: rgba(70,209,127,.09); color: #63e08f; border-color: rgba(70,209,127,.14); margin-top: 8px; }
+    .card-meta { margin-top: 8px; font-size: 12px; color: var(--muted); min-height: 18px; }
+    .empty { color: var(--muted); font-size: 14px; padding: 4px; }
+    .section-big-title { font-family: var(--title-font); font-size: 28px; margin: 0 0 8px; }
+    .section-sub { color: #b6afbf; line-height: 1.6; margin-bottom: 14px; }
+    .page-panel { padding: 18px; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.02); }
+    table { width: 100%; min-width: 820px; border-collapse: collapse; }
+    th,td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.05); text-align: left; font-size: 14px; }
+    th { font-size: 12px; color: #b0a8bb; text-transform: uppercase; letter-spacing: 1px; }
+    .chat-list { min-height: 380px; max-height: 540px; overflow: auto; border-radius: 18px; border: 1px solid var(--line); background: rgba(255,255,255,.02); padding: 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .chat-msg { padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,.05); background: rgba(255,255,255,.03); }
+    .chat-meta { display: flex; justify-content: space-between; gap: 8px; color: #afa7bb; font-size: 12px; margin-bottom: 6px; }
+    .chat-text { white-space: pre-wrap; word-break: break-word; line-height: 1.55; margin-bottom: 10px; }
+    .react-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .react-btn { padding: 6px 10px; border-radius: 999px; font-size: 13px; }
+    .chat-send { display: grid; grid-template-columns: 220px minmax(0, 1fr) auto; gap: 14px; align-items: end; padding: 20px; border-radius: 24px; background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018)); border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 18px 36px rgba(0,0,0,.16); }
+    .log-list,.list,.route-grid { display: flex; flex-direction: column; gap: 10px; }
+    .log-item,.list-item,.route-card { padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,.06); background: rgba(255,255,255,.03); }
+    .log-item small,.list-main small { display: block; color: #a69eb1; margin-top: 4px; }
+    .route-card .title { font-weight: 700; margin-bottom: 4px; }
+    .route-card .meta { color: var(--muted); font-size: 13px; }
+    .modal-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(0,0,0,.78); backdrop-filter: blur(8px); z-index: 120; }
+    .modal-overlay.show { display: flex; }
+    .modal { width: 100%; max-width: 580px; max-height: 92vh; overflow: auto; border-radius: 28px; background: linear-gradient(180deg, rgba(13,13,21,.99), rgba(8,8,14,.995)); border: 1px solid rgba(255,255,255,.09); box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.03); }
+    .modal.large { max-width: 860px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 26px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .modal-header h2 { margin: 0; font-family: var(--title-font); font-size: 28px; color: var(--red-soft); }
+    .close-btn { border: 0; background: transparent; color: #978fa4; font-size: 30px; cursor: pointer; }
+    .modal-body { padding: 22px 26px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 26px 24px; border-top: 1px solid rgba(255,255,255,.06); flex-wrap: wrap; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail-top { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .detail-avatar { width: 72px; height: 72px; border-radius: 18px; display: grid; place-items: center; background: linear-gradient(180deg, rgba(53,27,37,.9), rgba(22,22,30,.9)); border: 1px solid rgba(255,255,255,.07); color: var(--red-soft); font-size: 28px; font-weight: 800; }
+    .detail-name { margin: 0 0 6px; font-family: var(--title-font); font-size: 30px; }
+    .detail-sub { color: var(--muted); font-size: 14px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+    .info-box { border-radius: 16px; padding: 14px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); }
+    .info-label { color: #9c93a8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .info-value { font-size: 16px; font-weight: 700; line-height: 1.55; word-break: break-word; }
+    .info-value.red { color: #ff7e7e; }
+    .info-value.green { color: #69e694; }
+    .info-value.yellow { color: #efb64e; }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 18px; }
+    .code-box { min-width: 180px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); }
+    .code-value { font-size: 22px; font-weight: 800; letter-spacing: 5px; }
+    .sub-title { margin: 24px 0 10px; font-family: var(--title-font); color: var(--red-soft); font-size: 20px; }
+    .line-box { border-top: 1px solid rgba(255,255,255,.06); padding-top: 14px; }
+    .list-main { line-height: 1.55; font-size: 14px; }
+    .toast-wrap { position: fixed; top: 78px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast { min-width: 320px; max-width: 90vw; padding: 14px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,.08); background: rgba(10,10,18,.97); box-shadow: var(--shadow); }
+    .toast.success { border-color: rgba(70,209,127,.26); }
+    .toast.error { border-color: rgba(210,52,52,.26); }
+    .toast.info { border-color: rgba(109,167,255,.26); }
+    .toast-title { font-weight: 800; margin-bottom: 4px; }
+    .toast-text { color: #bab2c4; font-size: 14px; line-height: 1.45; }
+    .blur-code { filter: blur(5px); user-select: none; }
+    @media (max-width: 1450px) { .topbar { grid-template-columns: 1fr; } .searchbar { justify-self: stretch; max-width: none; } .hero-wrap { grid-template-columns: 1fr; } }
+    @media (max-width: 1100px) { .auth-wrap { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .stats { grid-template-columns: repeat(2,1fr); } .chat-send,.grid-2,.info-grid,.auth-mini-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .stats { grid-template-columns: 1fr; } .member-card { width: 100%; } .auth-title { font-size: 32px; } }
+  </style>
+</head>
+<body>
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-wrap">
+      <div class="auth-panel auth-left">
+        <button class="ghost-btn owner-login-link" id="openOwnerLoginBtn">Owner Login</button>
+        <div class="auth-logo"><img src="la-muerta.png" alt="Logo" onerror="this.outerHTML='L'"></div>
+        <h1 class="auth-title" id="authFactionTitle">La Muerta Show</h1>
+        <div class="auth-sub">Nur der Einstieg ist neu. Nach dem Login bleibt die Seite gleich.</div>
+        <div class="auth-mini-grid">
+          <div class="auth-mini"><strong>Fraktions Login</strong><span>Ein gemeinsamer Zugang für die ganze Fraktion.</span></div>
+          <div class="auth-mini"><strong>Admin Login</strong><span>Im Panel selbst wie vorher für die Verwaltung.</span></div>
+          <div class="auth-mini"><strong>Owner Login</strong><span>Klein oben rechts nur für dich.</span></div>
+          <div class="auth-mini"><strong>Gleiches Interface</strong><span>Nach dem Login kommt deine alte Oberfläche.</span></div>
+        </div>
+      </div>
+      <div class="auth-panel auth-right">
+        <h2>Fraktion einloggen</h2>
+        <p>Danach öffnet sich direkt die bekannte Oberfläche.</p>
+        <div class="field"><label>Fraktions Benutzername</label><input type="text" id="factionUsername" placeholder="Benutzername"></div>
+        <div class="field"><label>Fraktions Passwort</label><input type="password" id="factionPassword" placeholder="Passwort"></div>
+        <div class="row-actions"><button class="solid-btn red" id="factionLoginBtn">Einloggen</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ownerLoginModal" class="modal-overlay"><div class="modal"><div class="modal-header"><h2>Owner Login</h2><button class="close-btn" data-close="ownerLoginModal">×</button></div><div class="modal-body"><div class="field"><label>Benutzername</label><input type="text" id="ownerUsername" placeholder="owner"></div><div class="field"><label>Passwort</label><input type="password" id="ownerPassword" placeholder="Passwort"></div></div><div class="modal-footer"><button class="ghost-btn" data-close="ownerLoginModal">Abbrechen</button><button class="solid-btn red" id="ownerLoginSubmitBtn">Einloggen</button></div></div></div>
+  <div id="ownerPanelModal" class="modal-overlay"><div class="modal"><div class="modal-header"><h2>Owner Bereich</h2><button class="close-btn" data-close="ownerPanelModal">×</button></div><div class="modal-body"><div class="field"><label>Fraktionsname</label><input type="text" id="ownerFactionName"></div><div class="field"><label>Fraktions Benutzername</label><input type="text" id="ownerFactionUser"></div><div class="field"><label>Fraktions Passwort</label><input type="text" id="ownerFactionPass"></div></div><div class="modal-footer"><button class="ghost-btn" data-close="ownerPanelModal">Schließen</button><button class="solid-btn red" id="saveOwnerSettingsBtn">Speichern</button></div></div></div>
+
+  <div id="appShell" class="hidden">
+    <header class="topbar">
+      <div class="brand"><div class="logo"><img src="la-muerta.png" alt="Logo" onerror="this.outerHTML='M'"></div><div class="brand-title" id="brandTitleText">LA MUERTA SHOW</div></div>
+      <nav class="nav">
+        <button class="nav-btn active" data-page="dashboard">Mitglieder</button>
+        <button class="nav-btn" data-page="chat">Chat</button>
+        <button class="nav-btn" data-page="abgabe">Auszahlung</button>
+        <button class="nav-btn" data-page="routen">Routen</button>
+        <button class="nav-btn" data-page="settings">Einstellungen</button>
+      </nav>
+      <div class="searchbar"><span>🔎</span><input type="text" id="memberSearch" placeholder="Mitglied suchen..."></div>
+      <div class="top-actions">
+        <button class="ghost-btn" id="openFilterBtn">Filter</button>
+        <button class="ghost-btn" id="openAbmeldungBtn">Abmelden</button>
+        <div class="login-status" id="loginStatus">Nicht eingeloggt</div>
+        <button class="ghost-btn" id="openLoginBtn">Admin Login</button>
+        <button class="solid-btn green hidden" id="logoutBtn">Logout</button>
+        <button class="ghost-btn" id="logoutFactionBtn">Fraktion Logout</button>
+        <button class="solid-btn red hidden" id="addMemberBtn">Hinzufügen</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="page active" id="page-dashboard">
+        <div class="hero-wrap">
+          <div class="panel hero"><h2 id="dashboardHeroTitle">La Muerta Dashboard</h2><p id="dashboardHeroText">La Muerta Dashboard</p></div>
+          <div class="panel stats"><div class="stat-card"><div class="stat-label">Mitglieder</div><div class="stat-value" id="statMembers">0</div></div><div class="stat-card"><div class="stat-label">Warns</div><div class="stat-value" id="statWarns">0</div></div><div class="stat-card"><div class="stat-label">Abgemeldet</div><div class="stat-value" id="statAway">0</div></div><div class="stat-card"><div class="stat-label">Sanktionen $</div><div class="stat-value" id="statSanktionValue">0</div></div></div>
+        </div>
+        <div id="pollBannerWrap"></div>
+        <div class="toolbar"><div class="chip-row"><button class="chip active" data-filter="all">Alle</button><button class="chip" data-filter="active">Aktiv</button><button class="chip" data-filter="away">Abgemeldet</button><button class="chip hidden" id="adminQuickBtn">Admin Aktion</button></div></div>
+        <div id="dashboardRanksWrap"></div>
+      </section>
+
+      <section class="page" id="page-abgabe"><div class="panel page-panel"><div class="section-big-title">Auszahlung</div><div class="section-sub">Kalenderwoche <span id="weekLabel">12</span>. Admins können markieren, wer abgegeben hat.</div><div class="toolbar"><div class="chip-row"><button class="chip" id="prevWeekBtn">◀</button><button class="chip" id="nextWeekBtn">▶</button><button class="chip active" data-abgabe-filter="all">Alle</button><button class="chip" data-abgabe-filter="done">Bezahlt</button><button class="chip" data-abgabe-filter="open">Offen</button></div><div class="searchbar" style="max-width:340px;"><span>🔎</span><input type="text" id="abgabeSearch" placeholder="Mitglied suchen..."></div></div><div class="table-wrap"><table><thead><tr><th>Mitglied</th><th>Rang</th><th>Status</th><th>Diese Woche</th><th>Aktion</th></tr></thead><tbody id="abgabeTableBody"></tbody></table></div></div></section>
+      <section class="page" id="page-chat"><div class="panel page-panel"><div class="section-big-title">Chat</div><div class="section-sub">Zum Schreiben gibst du deinen Abmelde-Code ein. Dann wird der richtige Name automatisch zugeordnet.</div><div class="chat-list" id="chatList"></div><div class="chat-send"><div class="field" style="margin:0;"><label>Abmelde-Code</label><input type="text" id="chatCode" placeholder="4-stelliger Code"></div><div class="field" style="margin:0;"><label>Nachricht</label><input type="text" id="chatText" placeholder="Nachricht schreiben..."></div><div style="display:flex;align-items:end;"><button class="solid-btn red" id="sendChatBtn">Senden</button></div></div></div></section>
+      <section class="page" id="page-routen"><div class="panel page-panel"><div class="section-big-title">Routen</div><div class="section-sub">Nur per extra Code sichtbar.</div><div class="grid-2 hidden" id="routeAdminArea" style="align-items:end; margin-bottom:16px;"><div class="field" style="margin:0;"><label>Neues Routen-Passwort</label><input type="text" id="newRoutePassword" placeholder="Neues Passwort eingeben"></div><div style="display:flex; align-items:end;"><button class="solid-btn red" id="changeRoutePasswordBtn">Passwort ändern</button></div></div><div class="grid-2" style="align-items:end; margin-bottom:16px;"><div class="field" style="margin:0;"><label>Zugangscode</label><input type="password" id="routeAccessCode" placeholder="Code eingeben"></div><div class="chip-row"><button class="solid-btn red" id="unlockRoutesBtn">Freischalten</button><button class="ghost-btn" id="lockRoutesBtn">Sperren</button></div></div><div class="panel hidden" id="routeManageArea" style="padding:18px; margin-bottom:16px;"><div class="section-big-title" style="font-size:22px;">Routen verwalten</div><div class="grid-2"><div class="field"><label>Ordner Name</label><input type="text" id="routeFolderName" placeholder="z.B. Koks Route"></div><div class="field"><label>Eintrag</label><input type="text" id="routeEntryName" placeholder="z.B. Sammler PLZ 9331"></div></div><div class="row-actions" style="margin-bottom:0;"><button class="solid-btn red" id="addRouteEntryBtn">Routen Eintrag speichern</button></div></div><div id="routeContent" class="hidden"></div></div></section>
+      <section class="page" id="page-settings"><div class="panel page-panel"><div class="section-big-title">Einstellungen</div><div class="section-sub">Sauber sortiert in Bereiche.</div><div class="toolbar" style="margin-bottom:18px;"><div class="chip-row"><button class="chip active" data-settings-tab="logs">Logs</button><button class="chip hidden" id="settingsAdminTabBtn" data-settings-tab="admins">Admin Accounts</button><button class="chip hidden" id="settingsFactionTabBtn" data-settings-tab="faction">Fraktion ändern</button><button class="chip hidden" id="settingsWebhookTabBtn" data-settings-tab="webhooks">Webhooks</button><button class="chip hidden" id="settingsRanksTabBtn" data-settings-tab="ranks">Ränge</button></div></div><div id="settings-tab-logs" class="settings-tab"><div class="chip-row hidden" id="pollStartArea" style="margin-bottom:16px;"><button class="ghost-btn danger" id="deleteActivePollBtn">Aktive Umfrage löschen</button><button class="solid-btn red" id="openPollModalBtn">Umfrage starten</button></div><div class="section-big-title" style="font-size:22px;">Logs</div><div class="section-sub">Alle Änderungen und Abstimmungen.</div><div class="log-list" id="logList"></div><div class="empty" id="logEmpty">Noch keine Einträge.</div><div class="section-big-title hidden" id="pollResultsTitle" style="font-size:22px; margin-top:22px;">Abstimmungen</div><div class="log-list hidden" id="pollResultsList"></div><div class="empty hidden" id="pollResultsEmpty">Noch keine Abstimmungen.</div></div><div id="settings-tab-admins" class="settings-tab hidden"><div class="panel" style="padding:18px; margin-bottom:16px;"><div class="section-big-title" style="font-size:22px;">Admin Accounts</div><div class="section-sub">Neue Admins erstellen und vorhandene löschen.</div><div class="grid-2"><div class="field"><label>Dein Admin Name</label><input type="text" id="confirmAdminName" placeholder="Dein Admin Name"></div><div class="field"><label>Dein Admin Passwort</label><input type="password" id="confirmAdminPassword" placeholder="Dein Admin Passwort"></div></div><div class="grid-2"><div class="field"><label>Neuer Admin Name</label><input type="text" id="newAdminName" placeholder="Neuer Admin Name"></div><div class="field"><label>Neues Admin Passwort</label><input type="password" id="newAdminPassword" placeholder="Neues Admin Passwort"></div></div><div class="row-actions" style="margin-bottom:0;"><button class="solid-btn red" id="createAdminAccountBtn">Admin erstellen</button></div><div class="log-list" id="adminAccountList" style="margin-top:14px;"></div></div></div><div id="settings-tab-faction" class="settings-tab hidden"><div class="panel" style="padding:18px; margin-bottom:16px;"><div class="section-big-title" style="font-size:22px;">Fraktion ändern</div><div class="section-sub">Name, Farbe und Schriftart anpassen.</div><div class="grid-2"><div class="field"><label>Fraktionsname</label><input type="text" id="settingsFactionName" placeholder="Fraktionsname"></div><div class="field"><label>Farbe</label><input type="color" id="settingsFactionColor"></div></div><div class="field"><label>Schriftart</label><select id="settingsFontFamily"><option value="Cinzel">Cinzel</option><option value="Inter">Inter</option><option value="Georgia">Georgia</option><option value="Arial">Arial</option></select></div><div class="row-actions" style="margin-bottom:0;"><button class="ghost-btn blue" id="saveFactionLookBtn">Fraktion speichern</button></div></div></div><div id="settings-tab-webhooks" class="settings-tab hidden"><div class="panel" style="padding:18px; margin-bottom:16px;"><div class="section-big-title" style="font-size:22px;">Webhooks</div><div class="section-sub">Hier kannst du für diese Fraktion eigene Discord Webhooks speichern.</div><div class="grid-2"><div class="field"><label>Webhook für Umfragen</label><input type="text" id="webhookPoll" placeholder="Discord Webhook URL"></div><div class="field"><label>Webhook für Sanktionen</label><input type="text" id="webhookSanktion" placeholder="Discord Webhook URL"></div></div><div class="grid-2"><div class="field"><label>Webhook für Warns</label><input type="text" id="webhookWarn" placeholder="Discord Webhook URL"></div><div class="field"><label>Webhook für Logs</label><input type="text" id="webhookLog" placeholder="Discord Webhook URL"></div></div><div class="row-actions" style="margin-bottom:0;"><button class="solid-btn red" id="saveWebhookSettingsBtn">Webhooks speichern</button><button class="ghost-btn" id="testWebhookBtn">Log Webhook testen</button></div></div></div><div id="settings-tab-ranks" class="settings-tab hidden"><div class="panel" style="padding:18px; margin-bottom:16px;"><div class="section-big-title" style="font-size:22px;">Ränge bearbeiten</div><div class="section-sub">Hier vergibst du die Namen für deine eigenen Ränge. Aus 1er, 2er, 3er und so weiter werden deine Namen.</div><div id="rankSettingsList" class="log-list"></div><div class="row-actions" style="margin-bottom:0;"><button class="solid-btn red" id="saveRankSettingsBtn">Ränge speichern</button></div></div></div></section>
+    </main>
+
+    <div class="modal-overlay" id="pollModal"><div class="modal"><div class="modal-header"><h2>Umfrage starten</h2><button class="close-btn" data-close="pollModal">×</button></div><div class="modal-body"><div class="field"><label>Titel</label><input type="text" id="pollTitle" placeholder="Titel der Umfrage"></div><div class="field"><label>Grund / Info</label><textarea id="pollDescription" placeholder="Worum geht es?"></textarea></div></div><div class="modal-footer"><button class="ghost-btn" data-close="pollModal">Abbrechen</button><button class="solid-btn red" id="createPollBtn2">Umfrage starten</button></div></div></div>
+    <div class="modal-overlay" id="loginModal"><div class="modal"><div class="modal-header"><h2>Admin Login</h2><button class="close-btn" data-close="loginModal">×</button></div><div class="modal-body"><div class="field"><label>Benutzername</label><input type="text" id="loginUsername" placeholder="Benutzername"></div><div class="field"><label>Passwort</label><input type="password" id="loginPassword" placeholder="Passwort"></div></div><div class="modal-footer"><button class="ghost-btn" data-close="loginModal">Abbrechen</button><button class="solid-btn red" id="loginSubmitBtn">Einloggen</button></div></div></div>
+    <div class="modal-overlay" id="addMemberModal"><div class="modal"><div class="modal-header"><h2>Mitglied hinzufügen</h2><button class="close-btn" data-close="addMemberModal">×</button></div><div class="modal-body"><div class="field"><label>Rang</label><select id="memberRank"></select></div><div class="field"><label>IC Name</label><input type="text" id="memberIcName"></div><div class="field"><label>Discord Name</label><input type="text" id="memberDiscordName"></div><div class="field"><label>Discord ID</label><input type="text" id="memberDiscordId"></div></div><div class="modal-footer"><button class="ghost-btn" data-close="addMemberModal">Abbrechen</button><button class="solid-btn red" id="createMemberBtn">Erstellen</button></div></div></div>
+    <div class="modal-overlay" id="detailModal"><div class="modal large"><div class="modal-header"><h2 id="detailHeaderName">MITGLIED</h2><button class="close-btn" data-close="detailModal">×</button></div><div class="modal-body"><div class="detail-top"><div class="detail-avatar" id="detailAvatar">??</div><div><h3 class="detail-name" id="detailName">Name</h3><div class="detail-sub" id="detailRank">Rang</div></div></div><div class="info-grid"><div class="info-box"><div class="info-label">Discord</div><div class="info-value" id="detailDiscord">-</div></div><div class="info-box"><div class="info-label">Discord ID</div><div class="info-value" id="detailDiscordId">-</div></div></div><div class="info-grid"><div class="info-box"><div class="info-label">Status</div><div class="info-value green" id="detailStatus">Aktiv</div></div><div class="info-box"><div class="info-label">Sanktionen</div><div class="info-value yellow" id="detailSanktionCount">0 aktiv</div></div></div><div class="row-actions"><div class="code-box"><div class="info-label">Abmelde-Code</div><div class="code-value" id="detailCode">****</div></div><button class="ghost-btn blue hidden" id="copyCodeBtn">Code kopieren</button><button class="ghost-btn hidden" id="setAwayAdminBtn">Abmelden</button><button class="solid-btn green hidden" id="setActiveAdminBtn">Aktiv setzen</button></div><div class="sub-title">Abmeldung</div><div class="line-box"><div class="info-value" id="detailAbmeldungText">Keine aktive Abmeldung.</div></div><div class="sub-title">Warns</div><div class="line-box"><div class="row-actions"><button class="ghost-btn hidden" id="openWarnModalBtn">+ Warn hinzufügen</button></div><div class="list" id="warnList"></div><div class="empty" id="warnEmpty">Keine Warns vorhanden.</div></div><div class="sub-title">Sanktionen</div><div class="line-box"><div class="row-actions"><button class="ghost-btn hidden" id="openSanktionModalBtn">+ Sanktion hinzufügen</button></div><div class="list" id="sanktionList"></div><div class="empty" id="sanktionEmpty">Keine aktiven Sanktionen.</div></div><div class="sub-title">Notizen</div><div class="line-box"><div class="field" style="margin:0;"><textarea id="detailNotes" placeholder="Notizen..."></textarea></div></div></div><div class="modal-footer"><button class="ghost-btn blue hidden" id="openRankModalBtn">Rang ändern</button><button class="mini-btn danger hidden" id="deleteMemberDetailBtn" style="padding:11px 14px;">Mitglied löschen</button><button class="solid-btn red hidden" id="saveNotesBtn">Speichern</button></div></div></div>
+    <div class="modal-overlay" id="warnModal"><div class="modal"><div class="modal-header"><h2>Warn hinzufügen</h2><button class="close-btn" data-close="warnModal">×</button></div><div class="modal-body"><div class="field"><label>Grund</label><input type="text" id="warnReason"></div><div class="field"><label>Von wem</label><input type="text" id="warnBy"></div></div><div class="modal-footer"><button class="ghost-btn" data-close="warnModal">Abbrechen</button><button class="solid-btn red" id="saveWarnBtn">Warn setzen</button></div></div></div>
+    <div class="modal-overlay" id="sanktionModal"><div class="modal"><div class="modal-header"><h2>Sanktion hinzufügen</h2><button class="close-btn" data-close="sanktionModal">×</button></div><div class="modal-body"><div class="field"><label>Geldbetrag</label><input type="number" id="sanktionAmount"></div><div class="field"><label>Von wem</label><input type="text" id="sanktionBy"></div><div class="grid-2"><div class="field"><label>Bis Datum</label><input type="text" id="sanktionUntilDate"></div><div class="field"><label>Bis Uhrzeit</label><input type="text" id="sanktionUntilTime"></div></div></div><div class="modal-footer"><button class="ghost-btn" data-close="sanktionModal">Abbrechen</button><button class="solid-btn red" id="saveSanktionBtn">Sanktion setzen</button></div></div></div>
+    <div class="modal-overlay" id="abmeldungModal"><div class="modal"><div class="modal-header"><h2>Abmeldung</h2><button class="close-btn" data-close="abmeldungModal">×</button></div><div class="modal-body"><div class="field"><label>Abmelde-Code</label><input type="text" id="abmeldungCode"></div><div class="field"><label>Grund</label><input type="text" id="abmeldungReason"></div><div class="grid-2"><div class="field"><label>Bis Datum</label><input type="text" id="abmeldungUntilDate"></div><div class="field"><label>Bis Uhrzeit</label><input type="text" id="abmeldungUntilTime"></div></div></div><div class="modal-footer"><button class="ghost-btn" data-close="abmeldungModal">Abbrechen</button><button class="solid-btn red" id="submitAbmeldungBtn">Abmelden</button></div></div></div>
+    <div class="modal-overlay" id="rankModal"><div class="modal"><div class="modal-header"><h2>Rang ändern</h2><button class="close-btn" data-close="rankModal">×</button></div><div class="modal-body"><div class="field"><label>Neuer Rang</label><select id="newRankSelect"></select></div></div><div class="modal-footer"><button class="ghost-btn" data-close="rankModal">Abbrechen</button><button class="solid-btn red" id="saveRankBtn">Speichern</button></div></div></div>
+  </div>
+
+  <script>
+    const STORAGE_PREFIX = 'la_muerta_dashboard_fix_v4';
+    const OWNER_KEY = 'la_muerta_owner_gate_v4';
+    const FACTION_LOGIN_KEY = 'la_muerta_faction_gate_v4';
+    const GLOBAL_UI_KEY = 'la_muerta_global_ui_v4';
+    const WEBHOOKS_KEY_PREFIX = 'la_muerta_webhooks_v4';
+    const RANKS_KEY_PREFIX = 'la_muerta_ranks_v4';
+
+    const $ = (id) => document.getElementById(id);
+
+    let routeAccessCode = '4747';
+    let state = {
+      members: [], chat: [], logs: [], polls: [], currentWeek: 12,
+      filter: 'all', abgabeFilter: 'all', memberSearch: '', abgabeSearch: '', routesUnlocked: false
+    };
+    let adminAccounts = [];
+    let currentAdmin = null;
+    let currentMemberId = null;
+    let ownerConfig = { username: 'owner', password: '9999' };
+    let factionLogin = { username: 'la_muerta', password: '1234', factionName: 'La Muerta Show' };
+    let rankConfig = [];
+
+    function slugify(value){
+      return String(value || 'default')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '') || 'default';
+    }
+
+    function getFactionScope(){
+      const base = factionLogin.username || factionLogin.factionName || 'default';
+      return slugify(base);
+    }
+
+    function getScopedKey(name){
+      return `${STORAGE_PREFIX}_${getFactionScope()}_${name}`;
+    }
+
+    function getUiKey(name){
+      return `${GLOBAL_UI_KEY}_${name}`;
+    }
+
+    function getWebhookKey(){
+      return `${WEBHOOKS_KEY_PREFIX}_${getFactionScope()}`;
+    }
+
+    function getRanksKey(){
+      return `${RANKS_KEY_PREFIX}_${getFactionScope()}`;
+    }
+
+    function getDefaultRanks(){
+      return Array.from({ length: 12 }, (_, index) => ({ id: String(index + 1), name: `${index + 1}er` }));
+    }
+
+    function loadRankConfig(){
+      try {
+        const raw = JSON.parse(localStorage.getItem(getRanksKey()) || 'null');
+        if(Array.isArray(raw) && raw.length){
+          rankConfig = raw.map((rank, index) => ({ id: String(rank.id || index + 1), name: String(rank.name || `${index + 1}er`) }));
+        } else {
+          rankConfig = getDefaultRanks();
+        }
+      } catch {
+        rankConfig = getDefaultRanks();
+      }
+    }
+
+    function saveRankConfig(){
+      localStorage.setItem(getRanksKey(), JSON.stringify(rankConfig));
+    }
+
+    function getRankName(rankId){
+      const found = rankConfig.find(rank => String(rank.id) === String(rankId));
+      return found ? found.name : `${rankId}er`;
+    }
+
+    function refreshRankSelects(){
+      const selects = ['memberRank', 'newRankSelect'];
+      selects.forEach(selectId => {
+        const select = $(selectId);
+        if(!select) return;
+        const currentValue = select.value;
+        select.innerHTML = rankConfig.map(rank => `<option value="${rank.id}">${rank.id}er | ${rank.name}</option>`).join('');
+        if(rankConfig.some(rank => rank.id === currentValue)) select.value = currentValue;
+        else if(rankConfig[0]) select.value = rankConfig[0].id;
+      });
+    }
+
+    function renderRankSettings(){
+      const wrap = $('rankSettingsList');
+      if(!wrap) return;
+      wrap.innerHTML = rankConfig.map(rank => `
+        <div class="log-item">
+          <div class="field" style="margin:0;">
+            <label>${rank.id}er</label>
+            <input type="text" data-rank-input="${rank.id}" value="${rank.name}">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getPollWebhookStateKey(){
+      return getScopedKey('poll_webhook_state');
+    }
+
+    function loadPollWebhookState(){
+      try {
+        return JSON.parse(localStorage.getItem(getPollWebhookStateKey()) || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function savePollWebhookState(data){
+      localStorage.setItem(getPollWebhookStateKey(), JSON.stringify(data || {}));
+    }
+
+    function clearPollWebhookState(){
+      localStorage.removeItem(getPollWebhookStateKey());
+    }
+
+    function loadWebhooks(){
+      try {
+        return JSON.parse(localStorage.getItem(getWebhookKey()) || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function saveWebhooks(data){
+      localStorage.setItem(getWebhookKey(), JSON.stringify(data || {}));
+    }
+
+    function fillWebhookInputs(){
+      const hooks = loadWebhooks();
+      if($('webhookPoll')) $('webhookPoll').value = hooks.poll || '';
+      if($('webhookSanktion')) $('webhookSanktion').value = hooks.sanktion || '';
+      if($('webhookWarn')) $('webhookWarn').value = hooks.warn || '';
+      if($('webhookLog')) $('webhookLog').value = hooks.log || '';
+    }
+
+    function getWebhookColor(type){
+      const map = {
+        poll: 10181046,
+        sanktion: 15158332,
+        warn: 15844367,
+        log: 3447003
+      };
+      return map[type] || 15548997;
+    }
+
+    function buildWebhookPayload(type, title, description, fields = []){
+      return {
+        username: factionLogin.factionName || 'Fraktion',
+        embeds: [{
+          title,
+          description,
+          color: getWebhookColor(type),
+          author: { name: factionLogin.factionName || 'Fraktion' },
+          footer: { text: `Bereich: ${type}` },
+          timestamp: new Date().toISOString(),
+          fields: fields.filter(Boolean).map(field => ({
+            name: String(field.name || 'Info').slice(0, 256),
+            value: String(field.value || '-').slice(0, 1024),
+            inline: !!field.inline
+          }))
+        }]
+      };
+    }
+
+    async function sendWebhookEmbed(type, title, description, fields = []){
+      const hooks = loadWebhooks();
+      const url = String(hooks[type] || '').trim();
+      if(!url) return { ok:false, reason:'missing_url' };
+
+      try {
+        const response = await fetch(`${url}${url.includes('?') ? '&' : '?'}wait=true`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildWebhookPayload(type, title, description, fields))
+        });
+        if(!response.ok) return { ok:false, reason:`http_${response.status}` };
+        const data = await response.json().catch(() => null);
+        return { ok:true, data };
+      } catch (error) {
+        console.error('Webhook Fehler', error);
+        return { ok:false, reason:String(error) };
+      }
+    }
+
+    async function editWebhookEmbed(type, messageId, title, description, fields = []){
+      const hooks = loadWebhooks();
+      const url = String(hooks[type] || '').trim();
+      if(!url || !messageId) return { ok:false, reason:'missing_data' };
+
+      try {
+        const response = await fetch(`${url}/messages/${messageId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildWebhookPayload(type, title, description, fields))
+        });
+        if(!response.ok) return { ok:false, reason:`http_${response.status}` };
+        const data = await response.json().catch(() => null);
+        return { ok:true, data };
+      } catch (error) {
+        console.error('Webhook Edit Fehler', error);
+        return { ok:false, reason:String(error) };
+      }
+    }
+
+    async function deleteWebhookMessage(type, messageId){
+      const hooks = loadWebhooks();
+      const url = String(hooks[type] || '').trim();
+      if(!url || !messageId) return false;
+      try {
+        const response = await fetch(`${url}/messages/${messageId}`, { method:'DELETE' });
+        return response.ok;
+      } catch (error) {
+        console.error('Webhook Löschfehler', error);
+        return false;
+      }
+    }
+
+    async function syncActivePollWebhook(actionLabel = 'Umfrage Update'){
+      const poll = state.polls.find(p => p.active);
+      if(!poll) return false;
+
+      const yesVotes = Object.values(poll.votes || {}).filter(v => v.choice === 'yes');
+      const noVotes = Object.values(poll.votes || {}).filter(v => v.choice === 'no');
+      const yesCount = yesVotes.length;
+      const noCount = noVotes.length;
+      const voterListYes = yesVotes.map(v => v.name).join(', ') || 'Niemand';
+      const voterListNo = noVotes.map(v => v.name).join(', ') || 'Niemand';
+      const fields = [
+        { name:'Info', value: poll.description || '-', inline:false },
+        { name:'Ja', value: String(yesCount), inline:true },
+        { name:'Nein', value: String(noCount), inline:true },
+        { name:'Ja Stimmen', value: voterListYes, inline:false },
+        { name:'Nein Stimmen', value: voterListNo, inline:false }
+      ];
+
+      const pollWebhookState = loadPollWebhookState();
+      if(pollWebhookState.pollId === poll.id && pollWebhookState.messageId){
+        const edited = await editWebhookEmbed('poll', pollWebhookState.messageId, actionLabel, poll.title, fields);
+        if(edited.ok) return true;
+        await deleteWebhookMessage('poll', pollWebhookState.messageId);
+        clearPollWebhookState();
+      }
+
+      const created = await sendWebhookEmbed('poll', actionLabel, poll.title, fields);
+      if(created.ok && created.data?.id){
+        savePollWebhookState({ pollId: poll.id, messageId: created.data.id });
+        return true;
+      }
+      return false;
+    }
+
+    function hexToRgb(hex){
+      const cleaned = String(hex).replace('#','');
+      const full = cleaned.length === 3 ? cleaned.split('').map(c => c + c).join('') : cleaned;
+      const num = parseInt(full, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function rgbToHex(r, g, b){
+      return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+    }
+
+    function shadeColor(hex, factor){
+      const { r, g, b } = hexToRgb(hex);
+      return rgbToHex(r * factor, g * factor, b * factor);
+    }
+
+    function lightenColor(hex, amount){
+      const { r, g, b } = hexToRgb(hex);
+      return rgbToHex(r + (255 - r) * amount, g + (255 - g) * amount, b + (255 - b) * amount);
+    }
+
+    function defaultAdminAccounts(){
+      return [
+        { username: 'meteB', password: '2121', displayName: 'meteB' },
+        { username: 'paco1', password: '2122', displayName: 'paco1' }
+      ];
+    }
+
+    function saveState(){ localStorage.setItem(getScopedKey('state'), JSON.stringify(state)); }
+    function loadState(){ const raw = localStorage.getItem(getScopedKey('state')); if(raw){ try{ state = JSON.parse(raw);}catch{} } }
+    function saveAdmin(){ if(currentAdmin) localStorage.setItem(getScopedKey('admin_session'), JSON.stringify(currentAdmin)); else localStorage.removeItem(getScopedKey('admin_session')); }
+    function loadAdmin(){ const raw = localStorage.getItem(getScopedKey('admin_session')); if(raw){ try{ currentAdmin = JSON.parse(raw);}catch{} } else currentAdmin = null; }
+    function saveAdminAccounts(){ localStorage.setItem(getScopedKey('admin_accounts'), JSON.stringify(adminAccounts)); }
+    function loadAdminAccounts(){
+      const raw = localStorage.getItem(getScopedKey('admin_accounts'));
+      if(raw){
+        try{ adminAccounts = JSON.parse(raw); }
+        catch { adminAccounts = defaultAdminAccounts(); }
+      } else {
+        adminAccounts = defaultAdminAccounts();
+        saveAdminAccounts();
+      }
+    }
+    function saveRoutePassword(){ localStorage.setItem(getScopedKey('route_pw'), routeAccessCode); }
+    function loadRoutePassword(){ routeAccessCode = localStorage.getItem(getScopedKey('route_pw')) || '4747'; }
+    function saveRouteEntries(entries){ localStorage.setItem(getScopedKey('route_entries'), JSON.stringify(entries)); }
+    function loadRouteEntries(){ return JSON.parse(localStorage.getItem(getScopedKey('route_entries')) || '[]'); }
+
+    function loadOwnerAndFaction(){
+      const o = localStorage.getItem(OWNER_KEY); if(o){ try{ ownerConfig = JSON.parse(o);}catch{} }
+      const f = localStorage.getItem(FACTION_LOGIN_KEY); if(f){ try{ factionLogin = JSON.parse(f);}catch{} }
+    }
+    function saveOwnerAndFaction(){
+      localStorage.setItem(OWNER_KEY, JSON.stringify(ownerConfig));
+      localStorage.setItem(FACTION_LOGIN_KEY, JSON.stringify(factionLogin));
+    }
+    function isFactionLoggedIn(){ return localStorage.getItem(getScopedKey('faction_session')) === '1'; }
+    function setFactionLoggedIn(v){ if(v) localStorage.setItem(getScopedKey('faction_session'),'1'); else localStorage.removeItem(getScopedKey('faction_session')); }
+    function todayText(){ const n=new Date(); return n.toLocaleDateString('de-DE')+' '+n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}); }
+    function initials(name){ const w=name.trim().split(' ').filter(Boolean); if(!w.length) return '??'; if(w.length===1) return w[0].slice(0,2).toUpperCase(); return (w[0][0]+w[1][0]).toUpperCase(); }
+    function formatMoney(v){ return Number(v||0).toLocaleString('de-DE')+' $'; }
+    function isAdmin(){ return !!currentAdmin; }
+    function requireAdmin(){ if(!isAdmin()){ toast('Kein Admin','Diese Funktion ist nur für Admins.','error'); return false; } return true; }
+    function openModal(id){ const el=$(id); if(el) el.classList.add('show'); }
+    function closeModal(id){ const el=$(id); if(el) el.classList.remove('show'); }
+    function setShown(id, shown){ const el=$(id); if(el) el.classList.toggle('hidden', !shown); }
+    function toast(title,text,type='info'){ const wrap=$('toastWrap'); const node=document.createElement('div'); node.className='toast '+type; node.innerHTML=`<div class="toast-title">${title}</div><div class="toast-text">${text}</div>`; wrap.appendChild(node); setTimeout(()=>node.remove(),3000); }
+    function addLog(text){
+      state.logs.unshift({text,date:todayText()});
+      state.logs=state.logs.slice(0,120);
+      saveState();
+      renderLogs();
+      sendWebhookEmbed('log','Neuer Log Eintrag',text,[
+        { name:'Zeit', value: todayText(), inline:true },
+        { name:'Fraktion', value: factionLogin.factionName || 'Unbekannt', inline:true }
+      ]);
+    }
+
+    function updateFactionBranding(){
+      const name=factionLogin.factionName||'La Muerta Show';
+      $('authFactionTitle').textContent=name;
+      $('brandTitleText').textContent=name.toUpperCase();
+      $('dashboardHeroTitle').textContent=name.replace(/show$/i,'Dashboard');
+      $('dashboardHeroText').textContent=name.replace(/show$/i,'Dashboard');
+      $('ownerFactionName').value=name;
+      $('ownerFactionUser').value=factionLogin.username||'';
+      $('ownerFactionPass').value=factionLogin.password||'';
+
+      const chosenFont=localStorage.getItem(getUiKey(`${getFactionScope()}_font_family`)) || 'Cinzel';
+      const chosenColor=localStorage.getItem(getUiKey(`${getFactionScope()}_brand_color`)) || '#d23434';
+      const fontMap={Cinzel:`'Cinzel', serif`,Inter:`'Inter', sans-serif`,Georgia:'Georgia, serif',Arial:'Arial, sans-serif'};
+      document.documentElement.style.setProperty('--title-font', fontMap[chosenFont]||`'Cinzel', serif`);
+      document.documentElement.style.setProperty('--red', chosenColor);
+      document.documentElement.style.setProperty('--red-dark', shadeColor(chosenColor, 0.78));
+      document.documentElement.style.setProperty('--red-soft', lightenColor(chosenColor, 0.18));
+
+      if($('settingsFactionName')) $('settingsFactionName').value=name;
+      if($('settingsFontFamily')) $('settingsFontFamily').value=chosenFont;
+      if($('settingsFactionColor')) $('settingsFactionColor').value=chosenColor;
+      fillWebhookInputs();
+    }
+
+    function loadFactionData(){
+      loadState();
+      loadAdmin();
+      loadAdminAccounts();
+      loadRoutePassword();
+      loadRankConfig();
+    }
+
+    function ensureFactionDefaults(){
+      if(!state.members.length) seed();
+    }
+
+    function updateGateUi(){ const logged=isFactionLoggedIn(); $('authScreen').classList.toggle('hidden',logged); $('appShell').classList.toggle('hidden',!logged); updateFactionBranding(); }
+    function updateAdminUi(){
+      const admin=isAdmin();
+      setShown('openLoginBtn', !admin); setShown('logoutBtn', admin); setShown('addMemberBtn', admin); setShown('adminQuickBtn', admin);
+      setShown('routeAdminArea', admin); setShown('routeManageArea', admin); setShown('pollStartArea', admin); setShown('pollResultsTitle', admin); setShown('pollResultsList', admin); setShown('pollResultsEmpty', admin);
+      setShown('copyCodeBtn', admin); setShown('setAwayAdminBtn', admin); setShown('setActiveAdminBtn', admin); setShown('openWarnModalBtn', admin); setShown('openSanktionModalBtn', admin); setShown('openRankModalBtn', admin); setShown('deleteMemberDetailBtn', admin); setShown('saveNotesBtn', admin);
+      setShown('settingsAdminTabBtn', admin); setShown('settingsFactionTabBtn', admin); setShown('settingsWebhookTabBtn', admin); setShown('settingsRanksTabBtn', admin);
+      $('loginStatus').textContent=admin?`Eingeloggt als ${currentAdmin.displayName}`:'Nicht eingeloggt';
+    }
+
+    function factionLoginSubmit(){
+      const u=$('factionUsername').value.trim();
+      const p=$('factionPassword').value.trim();
+      if(u!==factionLogin.username || p!==factionLogin.password) return toast('Login fehlgeschlagen','Fraktions-Benutzername oder Passwort stimmt nicht.','error');
+      loadFactionData();
+      ensureFactionDefaults();
+      setFactionLoggedIn(true);
+      updateGateUi();
+      renderAll();
+      toast('Fraktion eingeloggt','Die bekannte Oberfläche wurde geöffnet.','success');
+    }
+    function factionLogout(){ setFactionLoggedIn(false); currentAdmin=null; saveAdmin(); updateGateUi(); updateAdminUi(); toast('Fraktion ausgeloggt','Du bist zurück beim Einstieg.','info'); }
+    function ownerLoginSubmit(){ const u=$('ownerUsername').value.trim(); const p=$('ownerPassword').value.trim(); if(u!==ownerConfig.username || p!==ownerConfig.password) return toast('Owner Login fehlgeschlagen','Benutzername oder Passwort stimmt nicht.','error'); closeModal('ownerLoginModal'); openModal('ownerPanelModal'); }
+    function saveOwnerSettings(){
+      const oldScope = getFactionScope();
+      const oldName = factionLogin.factionName;
+      factionLogin.factionName=$('ownerFactionName').value.trim()||factionLogin.factionName;
+      factionLogin.username=$('ownerFactionUser').value.trim()||factionLogin.username;
+      factionLogin.password=$('ownerFactionPass').value.trim()||factionLogin.password;
+      saveOwnerAndFaction();
+
+      const newScope = getFactionScope();
+      if(oldScope !== newScope){
+        state={members:[],chat:[],logs:[],polls:[],currentWeek:12,filter:'all',abgabeFilter:'all',memberSearch:'',abgabeSearch:'',routesUnlocked:false};
+        currentAdmin=null;
+        clearPollWebhookState();
+        loadFactionData();
+        ensureFactionDefaults();
+        saveAdmin();
+      } else if(oldName!==factionLogin.factionName){
+        saveState();
+      }
+
+      updateFactionBranding();
+      renderAll();
+      closeModal('ownerPanelModal');
+      toast('Gespeichert', oldScope !== newScope ? 'Neue Fraktion angelegt. Admins, Daten und Routen laufen jetzt getrennt pro Fraktion.' : 'Fraktions Login und Name wurden gespeichert.','success');
+    }
+    function loginAdmin(){ const u=$('loginUsername').value.trim(); const p=$('loginPassword').value.trim(); const found=adminAccounts.find(a=>a.username===u&&a.password===p); if(!found) return toast('Login fehlgeschlagen','Benutzername oder Passwort stimmt nicht.','error'); currentAdmin=found; saveAdmin(); updateAdminUi(); closeModal('loginModal'); $('loginUsername').value=''; $('loginPassword').value=''; toast('Willkommen',`Willkommen ${found.displayName}`,'success'); }
+    function logoutAdmin(){ currentAdmin=null; saveAdmin(); updateAdminUi(); toast('Logout','Du wurdest ausgeloggt.','info'); }
+    function generateCode(){ let code=String(Math.floor(1000+Math.random()*9000)); while(state.members.some(m=>m.abmeldeCode===code)) code=String(Math.floor(1000+Math.random()*9000)); return code; }
+    function createMember(){ if(!requireAdmin()) return; const rank=$('memberRank').value, icName=$('memberIcName').value.trim(), discordName=$('memberDiscordName').value.trim(), discordId=$('memberDiscordId').value.trim(); if(!icName||!discordName||!discordId) return toast('Fehlende Daten','Bitte alle Felder ausfüllen.','error'); const member={id:Date.now().toString(),rank,icName,discordName,discordId,abmeldeCode:generateCode(),status:'Aktiv',abmeldung:null,warns:[],sanktionen:[],notes:'',abgabe:{},createdBy:currentAdmin.displayName}; state.members.push(member); saveState(); renderAll(); addLog(`${member.icName} wurde von ${currentAdmin.displayName} erstellt als ${getRankName(rank)}.`); closeModal('addMemberModal'); $('memberIcName').value=''; $('memberDiscordName').value=''; $('memberDiscordId').value=''; toast('Mitglied hinzugefügt',`${member.icName} wurde erstellt. Code: ${member.abmeldeCode}`,'success'); }
+    function getMember(id){ return state.members.find(m=>m.id===id); }
+    function openMemberDetail(id){ currentMemberId=id; const member=getMember(id); if(!member) return; $('detailHeaderName').textContent=member.icName; $('detailAvatar').textContent=initials(member.icName); $('detailName').textContent=member.icName; $('detailRank').textContent=getRankName(member.rank); $('detailDiscord').textContent=member.discordName; $('detailDiscordId').textContent=member.discordId; $('detailSanktionCount').textContent=`${member.sanktionen.length} aktiv`; $('detailNotes').value=member.notes||''; $('detailStatus').textContent=member.status; $('detailStatus').className=`info-value ${member.status==='Abgemeldet'?'red':'green'}`; if(isAdmin()){ $('detailCode').textContent=member.abmeldeCode; $('detailCode').classList.remove('blur-code'); } else { $('detailCode').textContent='****'; $('detailCode').classList.add('blur-code'); } $('detailAbmeldungText').textContent=member.abmeldung?`Bis ${member.abmeldung.untilDate} ${member.abmeldung.untilTime} — ${member.abmeldung.reason}`:'Keine aktive Abmeldung.'; $('newRankSelect').value=member.rank; renderWarnList(member); renderSanktionList(member); updateAdminUi(); openModal('detailModal'); }
+    function renderWarnList(member){ const list=$('warnList'); list.innerHTML=''; $('warnEmpty').style.display=member.warns.length?'none':'block'; member.warns.forEach((warn,index)=>{ const item=document.createElement('div'); item.className='list-item'; item.innerHTML=`<div class="list-main"><strong>${warn.reason}</strong><small>Von: ${warn.by} • ${warn.date}</small></div>${isAdmin()?`<button class="mini-btn danger" data-del-warn="${index}" style="padding:10px 12px;">Löschen</button>`:''}`; list.appendChild(item); }); list.querySelectorAll('[data-del-warn]').forEach(btn=>btn.addEventListener('click',()=>deleteWarn(Number(btn.dataset.delWarn)))); }
+    function renderSanktionList(member){ const list=$('sanktionList'); list.innerHTML=''; $('sanktionEmpty').style.display=member.sanktionen.length?'none':'block'; member.sanktionen.forEach((s,index)=>{ const item=document.createElement('div'); item.className='list-item'; item.innerHTML=`<div class="list-main"><strong>${formatMoney(s.amount)}</strong><small>Von: ${s.by} • Bis: ${s.untilDate} ${s.untilTime}</small></div>${isAdmin()?`<button class="mini-btn danger" data-del-sanction="${index}" style="padding:10px 12px;">Löschen</button>`:''}`; list.appendChild(item); }); list.querySelectorAll('[data-del-sanction]').forEach(btn=>btn.addEventListener('click',()=>deleteSanktion(Number(btn.dataset.delSanction)))); }
+    function saveNotes(){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; m.notes=$('detailNotes').value; saveState(); addLog(`Notizen von ${m.icName} wurden von ${currentAdmin.displayName} gespeichert.`); toast('Gespeichert','Notizen wurden gespeichert.','success'); }
+    async function addWarn(){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; const reason=$('warnReason').value.trim(), by=$('warnBy').value.trim(); if(!reason||!by) return toast('Fehlende Daten','Bitte Grund und Von wem ausfüllen.','error'); m.warns.push({reason,by,date:todayText()}); saveState(); renderAll(); openMemberDetail(m.id); closeModal('warnModal'); $('warnReason').value=''; $('warnBy').value=''; addLog(`${m.icName} bekam eine Warn von ${by}. Grund: ${reason}`); await sendWebhookEmbed('warn','Neue Warn',`${m.icName} hat eine neue Warn erhalten.`,[{ name:'Mitglied', value:m.icName, inline:true },{ name:'Von', value:by, inline:true },{ name:'Grund', value:reason, inline:false },{ name:'Warns aktiv', value:String(m.warns.length), inline:true }]); toast('Warn gespeichert',`Warn für ${m.icName} wurde hinzugefügt.`,'success'); }
+    function deleteWarn(index){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; m.warns.splice(index,1); saveState(); renderAll(); openMemberDetail(m.id); addLog(`Warn bei ${m.icName} wurde von ${currentAdmin.displayName} gelöscht.`); toast('Warn gelöscht','Warn wurde entfernt.','info'); }
+    async function addSanktion(){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; const amount=$('sanktionAmount').value.trim(), by=$('sanktionBy').value.trim(), untilDate=$('sanktionUntilDate').value.trim(), untilTime=$('sanktionUntilTime').value.trim(); if(!amount||!by||!untilDate||!untilTime) return toast('Fehlende Daten','Bitte alle Felder ausfüllen.','error'); m.sanktionen.push({amount,by,untilDate,untilTime,date:todayText()}); saveState(); renderAll(); openMemberDetail(m.id); closeModal('sanktionModal'); $('sanktionAmount').value=''; $('sanktionBy').value=''; $('sanktionUntilDate').value=''; $('sanktionUntilTime').value=''; addLog(`${m.icName} bekam eine Sanktion über ${formatMoney(amount)} von ${by}.`); await sendWebhookEmbed('sanktion','Neue Sanktion',`${m.icName} hat eine neue Sanktion bekommen.`,[{ name:'Mitglied', value:m.icName, inline:true },{ name:'Betrag', value:formatMoney(amount), inline:true },{ name:'Von', value:by, inline:true },{ name:'Bis', value:`${untilDate} ${untilTime}`, inline:false }]); toast('Sanktion gespeichert',`Sanktion für ${m.icName} wurde hinzugefügt.`,'success'); }
+    function deleteSanktion(index){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; m.sanktionen.splice(index,1); saveState(); renderAll(); openMemberDetail(m.id); addLog(`Sanktion bei ${m.icName} wurde von ${currentAdmin.displayName} gelöscht.`); toast('Sanktion gelöscht','Sanktion wurde entfernt.','info'); }
+    function changeRank(){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; const old=m.rank; m.rank=$('newRankSelect').value; saveState(); renderAll(); openMemberDetail(m.id); closeModal('rankModal'); addLog(`${m.icName} wurde von ${currentAdmin.displayName} von ${getRankName(old)} zu ${getRankName(m.rank)} geändert.`); toast('Rang geändert',`${m.icName} ist jetzt ${getRankName(m.rank)}.`,'success'); }
+    function deleteMember(){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; if(!confirm(`Mitglied ${m.icName} wirklich löschen?`)) return; state.members=state.members.filter(x=>x.id!==m.id); saveState(); renderAll(); closeModal('detailModal'); addLog(`${m.icName} wurde von ${currentAdmin.displayName} gelöscht.`); toast('Mitglied gelöscht',`${m.icName} wurde entfernt.`,'info'); }
+    function setActive(){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; m.status='Aktiv'; m.abmeldung=null; saveState(); renderAll(); openMemberDetail(m.id); addLog(`${m.icName} wurde von ${currentAdmin.displayName} auf aktiv gesetzt.`); toast('Aktiv gesetzt',`${m.icName} ist jetzt aktiv.`,'success'); }
+    function submitAbmeldung(){ const code=$('abmeldungCode').value.trim(), reason=$('abmeldungReason').value.trim(), untilDate=$('abmeldungUntilDate').value.trim(), untilTime=$('abmeldungUntilTime').value.trim(); if(!code||!reason||!untilDate||!untilTime) return toast('Fehlende Daten','Bitte alle Felder ausfüllen.','error'); const m=state.members.find(x=>x.abmeldeCode===code); if(!m) return toast('Code nicht gefunden','Zu diesem Code wurde kein Mitglied gefunden.','error'); m.status='Abgemeldet'; m.abmeldung={reason,untilDate,untilTime}; saveState(); renderAll(); if(currentMemberId===m.id) openMemberDetail(m.id); closeModal('abmeldungModal'); $('abmeldungCode').value=''; $('abmeldungReason').value=''; $('abmeldungUntilDate').value=''; $('abmeldungUntilTime').value=''; addLog(`${m.icName} wurde abgemeldet bis ${untilDate} ${untilTime}. Grund: ${reason}`); toast('Abgemeldet',`${m.icName} wurde erfolgreich abgemeldet.`,'success'); }
+    function copyCode(){ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; navigator.clipboard.writeText(m.abmeldeCode).then(()=>toast('Code kopiert',`Code ${m.abmeldeCode} wurde kopiert.`,'info')).catch(()=>toast('Fehler','Code konnte nicht kopiert werden.','error')); }
+    function getWeekKey(){ return `kw_${state.currentWeek}`; }
+    function toggleAbgabe(id){ if(!requireAdmin()) return; const m=getMember(id); if(!m) return; const key=getWeekKey(); if(m.abgabe[key]) delete m.abgabe[key]; else m.abgabe[key]={by:currentAdmin.displayName,date:todayText()}; saveState(); renderAbgabe(); addLog(`Abgabe von ${m.icName} für KW ${state.currentWeek} wurde von ${currentAdmin.displayName} geändert.`); }
+    function renderDashboard(){ const wrap = $('dashboardRanksWrap'); wrap.innerHTML = ''; let list=[...state.members].sort((a,b)=>Number(a.rank)-Number(b.rank)||a.icName.localeCompare(b.icName)); const search=state.memberSearch.toLowerCase().trim(); if(state.filter==='active') list=list.filter(m=>m.status==='Aktiv'); if(state.filter==='away') list=list.filter(m=>m.status==='Abgemeldet'); if(search) list=list.filter(m=>m.icName.toLowerCase().includes(search)||m.discordName.toLowerCase().includes(search)||m.discordId.toLowerCase().includes(search)); rankConfig.forEach(rank => { const membersForRank = list.filter(member => String(member.rank) === String(rank.id)); const section = document.createElement('section'); section.className = 'section'; section.innerHTML = `<div class="section-head"><div class="rank-pill">${rank.id}er</div><div class="section-title">${rank.name}</div><div class="count-badge">${state.members.filter(m => String(m.rank) === String(rank.id)).length}</div></div><div class="cards" id="rank-${rank.id}"></div><div class="empty" id="empty-${rank.id}">Noch keine Mitglieder.</div>`; wrap.appendChild(section); const cards = section.querySelector(`#rank-${rank.id}`); const empty = section.querySelector(`#empty-${rank.id}`); membersForRank.forEach(member=>{ const card=document.createElement('div'); card.className='member-card'; card.innerHTML=`<div class="card-avatar">${initials(member.icName)}</div><div class="card-name">${member.icName}</div><div class="card-discord">${member.discordName}</div><div class="status-tag ${member.status==='Abgemeldet'?'away':'active'}">${member.status}</div><div class="warn-tag">⚠ ${member.warns.length}/3</div><div class="card-meta">${member.status==='Abgemeldet'&&member.abmeldung?`bis ${member.abmeldung.untilDate} ${member.abmeldung.untilTime}`:''}</div>`; card.addEventListener('click',()=>openMemberDetail(member.id)); cards.appendChild(card); }); empty.style.display = membersForRank.length ? 'none' : 'block'; }); $('statMembers').textContent=state.members.length; $('statWarns').textContent=state.members.reduce((n,m)=>n+m.warns.length,0); $('statAway').textContent=state.members.filter(m=>m.status==='Abgemeldet').length; $('statSanktionValue').textContent=state.members.reduce((n,m)=>n+m.sanktionen.reduce((a,s)=>a+Number(s.amount||0),0),0).toLocaleString('de-DE'); }
+    function renderAbgabe(){ $('weekLabel').textContent=state.currentWeek; const body=$('abgabeTableBody'); body.innerHTML=''; let list=[...state.members]; const search=state.abgabeSearch.toLowerCase().trim(); if(search) list=list.filter(m=>m.icName.toLowerCase().includes(search)||m.discordName.toLowerCase().includes(search)); list.forEach(member=>{ const paid=!!member.abgabe[getWeekKey()]; if(state.abgabeFilter==='done'&&!paid) return; if(state.abgabeFilter==='open'&&paid) return; const tr=document.createElement('tr'); tr.innerHTML=`<td>${member.icName}</td><td>${getRankName(member.rank)}</td><td><span class="small-status ${member.status==='Abgemeldet'?'away':'active'}">${member.status}</span></td><td>${paid?'Bezahlt':'Offen'}</td><td>${isAdmin()?`<button class="ghost-btn abgabe-btn" data-member-id="${member.id}">${paid?'Zurücksetzen':'Als bezahlt'}</button>`:'<span style="color:var(--muted);">Nur Admin</span>'}</td>`; body.appendChild(tr); }); body.querySelectorAll('.abgabe-btn').forEach(btn=>btn.addEventListener('click',()=>toggleAbgabe(btn.dataset.memberId))); }
+    function renderChat(){ const list=$('chatList'); list.innerHTML=''; if(!state.chat.length){ list.innerHTML='<div class="empty">Noch keine Nachrichten im Chat.</div>'; return; } state.chat.forEach(msg=>{ const el=document.createElement('div'); el.className='chat-msg'; el.innerHTML=`<div class="chat-meta"><strong>${msg.name}</strong><span>${msg.date}</span></div><div class="chat-text">${msg.text}</div><div class="react-row"><button class="react-btn react" data-id="${msg.id}" data-emoji="❤️">❤️ ${msg.reactions['❤️']||0}</button><button class="react-btn react" data-id="${msg.id}" data-emoji="🔥">🔥 ${msg.reactions['🔥']||0}</button><button class="react-btn react" data-id="${msg.id}" data-emoji="👀">👀 ${msg.reactions['👀']||0}</button></div>`; list.appendChild(el); }); list.querySelectorAll('.react').forEach(btn=>btn.addEventListener('click',()=>reactChat(btn.dataset.id,btn.dataset.emoji))); list.scrollTop=list.scrollHeight; }
+    function sendChat(){ const code=$('chatCode').value.trim(), text=$('chatText').value.trim(); if(!code||!text) return toast('Fehlende Daten','Bitte Code und Nachricht eingeben.','error'); const member=state.members.find(m=>m.abmeldeCode===code); if(!member) return toast('Code ungültig','Mit diesem Code wurde kein Mitglied gefunden.','error'); state.chat.push({id:Date.now().toString(),memberId:member.id,name:member.icName,text,date:todayText(),reactions:{}}); saveState(); renderChat(); $('chatText').value=''; }
+    function reactChat(id,emoji){ const msg=state.chat.find(m=>m.id===id); if(!msg) return; msg.reactions[emoji]=(msg.reactions[emoji]||0)+1; saveState(); renderChat(); }
+    function renderLogs(){ const list=$('logList'); list.innerHTML=''; $('logEmpty').style.display=state.logs.length?'none':'block'; state.logs.forEach(log=>{ const node=document.createElement('div'); node.className='log-item'; node.innerHTML=`${log.text}<small>${log.date}</small>`; list.appendChild(node); }); renderAdminAccounts(); }
+    function renderAdminAccounts(){ const list=$('adminAccountList'); if(!list) return; list.innerHTML=''; adminAccounts.forEach(acc=>{ const row=document.createElement('div'); row.className='log-item'; row.innerHTML=`<div style="display:flex; justify-content:space-between; gap:12px; align-items:center;"><div><strong>${acc.displayName}</strong><small>${acc.username}</small></div>${isAdmin()?`<button class="mini-btn danger del-admin" data-user="${acc.username}" style="padding:10px 12px;">Löschen</button>`:''}</div>`; list.appendChild(row); }); list.querySelectorAll('.del-admin').forEach(btn=>btn.addEventListener('click',()=>deleteAdminAccount(btn.dataset.user))); }
+    function deleteAdminAccount(username){ if(!requireAdmin()) return; if(adminAccounts.length<=1) return toast('Nicht möglich','Mindestens ein Admin muss bleiben.','error'); if(!confirm(`Admin ${username} wirklich löschen?`)) return; adminAccounts=adminAccounts.filter(a=>a.username!==username); saveAdminAccounts(); if(currentAdmin&&currentAdmin.username===username){ currentAdmin=null; saveAdmin(); } renderAdminAccounts(); updateAdminUi(); toast('Admin gelöscht',`${username} wurde nur in dieser Fraktion entfernt.`,'info'); }
+    function renderPollBanner(){ const wrap=$('pollBannerWrap'); wrap.innerHTML=''; const poll=state.polls.find(p=>p.active); if(!poll) return; const yes=Object.values(poll.votes||{}).filter(v=>v.choice==='yes').length; const no=Object.values(poll.votes||{}).filter(v=>v.choice==='no').length; const box=document.createElement('div'); box.className='panel poll-banner'; box.innerHTML=`<div class="poll-banner-title">Umfrage</div><div style="font-weight:700; margin-bottom:6px;">${poll.title}</div><div class="poll-banner-text">${poll.description}</div><div class="chip-row"><button class="solid-btn green" id="voteYesBtn">Ja (${yes})</button><button class="ghost-btn danger" id="voteNoBtn">Nein (${no})</button></div>`; wrap.appendChild(box); $('voteYesBtn').addEventListener('click',()=>openVotePrompt('yes')); $('voteNoBtn').addEventListener('click',()=>openVotePrompt('no')); }
+    function renderPollResults(){ const list=$('pollResultsList'), empty=$('pollResultsEmpty'); list.innerHTML=''; if(!state.polls.length){ empty.style.display=isAdmin()?'block':'none'; return; } empty.style.display='none'; state.polls.forEach(poll=>{ const yes=Object.values(poll.votes||{}).filter(v=>v.choice==='yes').map(v=>v.name).join(', ')||'Keine'; const no=Object.values(poll.votes||{}).filter(v=>v.choice==='no').map(v=>v.name).join(', ')||'Keine'; const node=document.createElement('div'); node.className='log-item'; node.innerHTML=`<strong>${poll.title}</strong><small>${poll.description}</small><small>Ja: ${yes}</small><small>Nein: ${no}</small>`; list.appendChild(node); }); }
+    function openVotePrompt(choice){ const code=prompt(`Dein Abmelde-Code für ${choice==='yes'?'Ja':'Nein'}:`); if(!code) return; submitPollVote(choice,code.trim()); }
+    async function submitPollVote(choice,code){ const poll=state.polls.find(p=>p.active); if(!poll) return toast('Keine Umfrage','Aktuell läuft keine Umfrage.','error'); const member=state.members.find(m=>m.abmeldeCode===code); if(!member) return toast('Code ungültig','Mit diesem Code wurde kein Mitglied gefunden.','error'); poll.votes=poll.votes||{}; if(poll.votes[code]) return toast('Schon abgestimmt','Mit diesem Code wurde bereits abgestimmt.','error'); poll.votes[code]={choice,name:member.icName,date:todayText()}; saveState(); renderPollBanner(); renderPollResults(); await syncActivePollWebhook(`${member.icName} hat abgestimmt`); toast('Stimme gespeichert',`${member.icName} hat abgestimmt.`,'success'); }
+    async function createPoll(){ if(!requireAdmin()) return; const title=$('pollTitle').value.trim(), description=$('pollDescription').value.trim(); if(!title||!description) return toast('Fehlende Daten','Bitte Titel und Grund eintragen.','error'); const existing = loadPollWebhookState(); if(existing.messageId) await deleteWebhookMessage('poll', existing.messageId); clearPollWebhookState(); state.polls.forEach(p=>p.active=false); state.polls.unshift({id:Date.now().toString(),title,description,votes:{},active:true,createdBy:currentAdmin.displayName,date:todayText()}); saveState(); renderPollBanner(); renderPollResults(); closeModal('pollModal'); $('pollTitle').value=''; $('pollDescription').value=''; addLog(`${currentAdmin.displayName} hat eine Umfrage gestartet: ${title}`); await syncActivePollWebhook('Neue Umfrage'); toast('Umfrage gestartet','Die Umfrage wird jetzt auf dem Dashboard angezeigt.','success'); }
+    async function deleteActivePoll(){ if(!requireAdmin()) return; const poll=state.polls.find(p=>p.active); if(!poll) return toast('Keine Umfrage','Es gibt gerade keine aktive Umfrage.','error'); if(!confirm(`Aktive Umfrage "${poll.title}" wirklich löschen?`)) return; const pollWebhookState = loadPollWebhookState(); if(pollWebhookState.messageId) await deleteWebhookMessage('poll', pollWebhookState.messageId); clearPollWebhookState(); state.polls=state.polls.filter(p=>p.id!==poll.id); saveState(); renderPollBanner(); renderPollResults(); addLog(`${currentAdmin.displayName} hat die Umfrage gelöscht: ${poll.title}`); toast('Umfrage gelöscht','Die aktive Umfrage wurde entfernt.','info'); }
+    function updateRouteAccessUi(){ $('routeContent').classList.toggle('hidden',!state.routesUnlocked); if(state.routesUnlocked) renderRouteEntries(); }
+    function renderRouteEntries(){ const wrap=$('routeContent'); const routes=loadRouteEntries(); wrap.innerHTML=`<div class="route-grid">${routes.length?routes.map(r=>`<div class="route-card"><div class="title">${r.folder}</div><div class="meta">${r.entry}</div></div>`).join(''):'<div class="route-card"><div class="title">Keine Routen</div><div class="meta">Noch keine Ordner oder Einträge vorhanden.</div></div>'}</div>`; }
+    function unlockRoutes(){ const code=$('routeAccessCode').value.trim(); if(code!==routeAccessCode) return toast('Falscher Code','Der Zugangscode stimmt nicht.','error'); state.routesUnlocked=true; saveState(); updateRouteAccessUi(); $('routeAccessCode').value=''; toast('Freigeschaltet','Die Routen-Seite wurde geöffnet.','success'); }
+    function lockRoutes(){ state.routesUnlocked=false; saveState(); updateRouteAccessUi(); toast('Gesperrt','Die Routen-Seite wurde wieder gesperrt.','info'); }
+    function changeRoutePassword(){ if(!requireAdmin()) return; const pw=$('newRoutePassword').value.trim(); if(!pw) return toast('Fehlende Daten','Bitte ein neues Passwort eingeben.','error'); routeAccessCode=pw; saveRoutePassword(); $('newRoutePassword').value=''; addLog(`${currentAdmin.displayName} hat das Routen-Passwort geändert.`); toast('Passwort geändert','Das neue Routen-Passwort wurde gespeichert.','success'); }
+    function addRouteEntry(){ if(!requireAdmin()) return; const folder=$('routeFolderName').value.trim(), entry=$('routeEntryName').value.trim(); if(!folder||!entry) return toast('Fehlende Daten','Bitte Ordner Name und Eintrag ausfüllen.','error'); const routes=loadRouteEntries(); routes.push({folder,entry}); saveRouteEntries(routes); $('routeFolderName').value=''; $('routeEntryName').value=''; renderRouteEntries(); toast('Route gespeichert','Der Routen Eintrag wurde gespeichert.','success'); }
+    function renderAll(){ refreshRankSelects(); renderRankSettings(); renderDashboard(); renderAbgabe(); renderChat(); renderLogs(); renderPollBanner(); renderPollResults(); updateRouteAccessUi(); updateAdminUi(); updateFactionBranding(); saveState(); }
+    function seed(){ if(state.members.length) return; state.members=[{ id:'m1', rank:'1', icName:'Seroo Show', discordName:'seroshow', discordId:'100000000000000001', abmeldeCode:'4317', status:'Aktiv', abmeldung:null, warns:[], sanktionen:[], notes:'', abgabe:{ kw_12:{ by:'meteB', date:todayText() } }, createdBy:'meteB' },{ id:'m2', rank:'2', icName:'Yavuz ackermann', discordName:'sezeroz', discordId:'100000000000000002', abmeldeCode:'2251', status:'Aktiv', abmeldung:null, warns:[], sanktionen:[], notes:'', abgabe:{}, createdBy:'meteB' },{ id:'m3', rank:'2', icName:'Mr, kato', discordName:'kato.offiziell', discordId:'100000000000000003', abmeldeCode:'5319', status:'Aktiv', abmeldung:null, warns:[], sanktionen:[], notes:'', abgabe:{}, createdBy:'meteB' },{ id:'m4', rank:'3', icName:'Mete Blunt', discordName:'hamsterkilll', discordId:'100000000000000004', abmeldeCode:'1234', status:'Abgemeldet', abmeldung:{ reason:'bis', untilDate:'29/03', untilTime:'18:00' }, warns:[], sanktionen:[], notes:'', abgabe:{}, createdBy:'meteB' },{ id:'m5', rank:'3', icName:'Maurice Reacher', discordName:'maurice200_10', discordId:'100000000000000005', abmeldeCode:'8841', status:'Aktiv', abmeldung:null, warns:[], sanktionen:[], notes:'', abgabe:{}, createdBy:'meteB' }]; state.logs=[{ text:'Startdaten wurden geladen.', date:todayText() }]; saveState(); }
+    function switchPage(name){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); $(`page-${name}`).classList.add('active'); document.querySelector(`.nav-btn[data-page="${name}"]`)?.classList.add('active'); }
+    function openSettingsTab(tab){ document.querySelectorAll('.settings-tab').forEach(p=>p.classList.add('hidden')); const panel=$(`settings-tab-${tab}`); if(panel) panel.classList.remove('hidden'); document.querySelectorAll('[data-settings-tab]').forEach(btn=>btn.classList.toggle('active', btn.dataset.settingsTab===tab)); }
+
+    document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',()=>switchPage(btn.dataset.page)));
+    document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>closeModal(btn.dataset.close)));
+    window.addEventListener('click',e=>document.querySelectorAll('.modal-overlay.show').forEach(modal=>{ if(e.target===modal) modal.classList.remove('show'); }));
+    document.querySelectorAll('.chip[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('.chip[data-filter]').forEach(ch=>ch.classList.remove('active')); btn.classList.add('active'); state.filter=btn.dataset.filter; renderDashboard(); }));
+    document.querySelectorAll('.chip[data-abgabe-filter]').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('.chip[data-abgabe-filter]').forEach(ch=>ch.classList.remove('active')); btn.classList.add('active'); state.abgabeFilter=btn.dataset.abgabeFilter; renderAbgabe(); }));
+    document.querySelectorAll('[data-settings-tab]').forEach(btn=>btn.addEventListener('click',()=>openSettingsTab(btn.dataset.settingsTab)));
+    $('memberSearch').addEventListener('input',e=>{ state.memberSearch=e.target.value; renderDashboard(); });
+    $('abgabeSearch').addEventListener('input',e=>{ state.abgabeSearch=e.target.value; renderAbgabe(); });
+    $('openFilterBtn').addEventListener('click',()=>toast('Filter','Die Filter sind unten bei Alle, Aktiv und Abgemeldet.','info'));
+    $('openAbmeldungBtn').addEventListener('click',()=>openModal('abmeldungModal'));
+    $('openLoginBtn').addEventListener('click',()=>openModal('loginModal'));
+    $('loginSubmitBtn').addEventListener('click',loginAdmin);
+    $('logoutBtn').addEventListener('click',logoutAdmin);
+    $('logoutFactionBtn').addEventListener('click',factionLogout);
+    $('addMemberBtn').addEventListener('click',()=>{ if(requireAdmin()) openModal('addMemberModal'); });
+    $('createMemberBtn').addEventListener('click',createMember);
+    $('submitAbmeldungBtn').addEventListener('click',submitAbmeldung);
+    $('copyCodeBtn').addEventListener('click',copyCode);
+    $('openWarnModalBtn').addEventListener('click',()=>{ if(requireAdmin()) openModal('warnModal'); });
+    $('saveWarnBtn').addEventListener('click',addWarn);
+    $('openSanktionModalBtn').addEventListener('click',()=>{ if(requireAdmin()) openModal('sanktionModal'); });
+    $('saveSanktionBtn').addEventListener('click',addSanktion);
+    $('saveNotesBtn').addEventListener('click',saveNotes);
+    $('openRankModalBtn').addEventListener('click',()=>{ if(requireAdmin()) openModal('rankModal'); });
+    $('saveRankBtn').addEventListener('click',changeRank);
+    $('deleteMemberDetailBtn').addEventListener('click',deleteMember);
+    $('setActiveAdminBtn').addEventListener('click',setActive);
+    $('setAwayAdminBtn').addEventListener('click',()=>{ if(!requireAdmin()) return; const m=getMember(currentMemberId); if(!m) return; $('abmeldungCode').value=m.abmeldeCode; openModal('abmeldungModal'); });
+    $('prevWeekBtn').addEventListener('click',()=>{ state.currentWeek=Math.max(1,state.currentWeek-1); renderAbgabe(); });
+    $('nextWeekBtn').addEventListener('click',()=>{ state.currentWeek=Math.min(52,state.currentWeek+1); renderAbgabe(); });
+    $('sendChatBtn').addEventListener('click',sendChat);
+    $('unlockRoutesBtn').addEventListener('click',unlockRoutes);
+    $('lockRoutesBtn').addEventListener('click',lockRoutes);
+    $('changeRoutePasswordBtn').addEventListener('click',changeRoutePassword);
+    $('addRouteEntryBtn').addEventListener('click',addRouteEntry);
+    $('adminQuickBtn').addEventListener('click',()=>{ if(requireAdmin()) toast('Admin Aktion','Hier kannst du später Sammelaktionen einbauen.','info'); });
+    $('openPollModalBtn').addEventListener('click',()=>{ if(requireAdmin()) openModal('pollModal'); });
+    $('createPollBtn2').addEventListener('click',createPoll);
+    $('deleteActivePollBtn').addEventListener('click',deleteActivePoll);
+    $('openOwnerLoginBtn').addEventListener('click',()=>openModal('ownerLoginModal'));
+    $('ownerLoginSubmitBtn').addEventListener('click',ownerLoginSubmit);
+    $('saveOwnerSettingsBtn').addEventListener('click',saveOwnerSettings);
+    $('createAdminAccountBtn').addEventListener('click',()=>{
+      if(!requireAdmin()) return;
+      const confirmName=$('confirmAdminName').value.trim(), confirmPassword=$('confirmAdminPassword').value.trim();
+      const creator=adminAccounts.find(a=>a.username===confirmName&&a.password===confirmPassword);
+      if(!creator) return toast('Bestätigung fehlgeschlagen','Dein Admin Name oder Passwort stimmt nicht.','error');
+      const newName=$('newAdminName').value.trim(), newPassword=$('newAdminPassword').value.trim();
+      if(!newName||!newPassword) return toast('Fehlende Daten','Bitte neuen Admin Namen und Passwort eintragen.','error');
+      if(adminAccounts.some(a=>a.username===newName)) return toast('Name vergeben','Dieser Admin Name existiert bereits.','error');
+      adminAccounts.push({username:newName,password:newPassword,displayName:newName});
+      saveAdminAccounts();
+      $('confirmAdminName').value=''; $('confirmAdminPassword').value=''; $('newAdminName').value=''; $('newAdminPassword').value='';
+      renderAdminAccounts();
+      toast('Admin erstellt','Der neue Admin Account wurde nur für diese Fraktion gespeichert.','success');
+    });
+    $('saveFactionLookBtn').addEventListener('click',()=>{
+      if(!requireAdmin()) return;
+      const newFactionName=$('settingsFactionName').value.trim(), fontValue=$('settingsFontFamily').value, colorValue=$('settingsFactionColor').value;
+      if(newFactionName) factionLogin.factionName=newFactionName;
+      localStorage.setItem(getUiKey(`${getFactionScope()}_font_family`), fontValue);
+      localStorage.setItem(getUiKey(`${getFactionScope()}_brand_color`), colorValue);
+      saveOwnerAndFaction();
+      updateFactionBranding();
+      toast('Gespeichert','Fraktionsname, Farbe und Schriftart wurden gespeichert.','success');
+    });
+    $('saveRankSettingsBtn').addEventListener('click',()=>{
+      if(!requireAdmin()) return;
+      const nextRanks = rankConfig.map(rank => {
+        const input = document.querySelector(`[data-rank-input="${rank.id}"]`);
+        return { id: rank.id, name: (input?.value || `${rank.id}er`).trim() || `${rank.id}er` };
+      });
+      rankConfig = nextRanks;
+      saveRankConfig();
+      refreshRankSelects();
+      renderRankSettings();
+      renderAll();
+      toast('Gespeichert','Die Rangnamen wurden gespeichert.','success');
+    });
+    $('saveWebhookSettingsBtn').addEventListener('click',async ()=>{
+      if(!requireAdmin()) return;
+      saveWebhooks({
+        poll: $('webhookPoll').value.trim(),
+        sanktion: $('webhookSanktion').value.trim(),
+        warn: $('webhookWarn').value.trim(),
+        log: $('webhookLog').value.trim()
+      });
+      const result = await sendWebhookEmbed('log','Webhook verbunden','Der Log Webhook wurde gespeichert und getestet.',[
+        { name:'Fraktion', value:factionLogin.factionName || 'Unbekannt', inline:true }
+      ]);
+      toast('Gespeichert', result.ok ? 'Webhooks gespeichert. Test wurde abgeschickt.' : 'Webhooks gespeichert, aber der Test konnte nicht gesendet werden.', result.ok ? 'success' : 'error');
+    });
+    $('testWebhookBtn').addEventListener('click',async ()=>{
+      if(!requireAdmin()) return;
+      const result = await sendWebhookEmbed('log','Test Embed','Das ist ein manueller Test vom Log Webhook.',[
+        { name:'Fraktion', value:factionLogin.factionName || 'Unbekannt', inline:true },
+        { name:'Zeit', value:todayText(), inline:true }
+      ]);
+      toast(result.ok ? 'Test gesendet' : 'Test fehlgeschlagen', result.ok ? 'Wenn dein Webhook korrekt ist, sollte jetzt ein Embed in Discord auftauchen.' : 'Der Test konnte nicht gesendet werden. Prüfe den Link.', result.ok ? 'success' : 'error');
+    });
+    $('factionLoginBtn').addEventListener('click',factionLoginSubmit);
+
+    loadOwnerAndFaction();
+    loadFactionData();
+    ensureFactionDefaults();
+    updateGateUi();
+    openSettingsTab('logs');
+    renderAll();
+  </script>
+</body>
+</html>
