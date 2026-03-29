@@ -299,6 +299,12 @@
       </div>
       <div class="auth-panel auth-right">
         <h2>Fraktion einloggen</h2>
+       
+  <input id="fraktionName" placeholder="Neue Fraktion erstellen">
+  <button onclick="createFraktion(document.getElementById('fraktionName').value)">
+    Fraktion erstellen
+  </button>
+        
         <p>Danach öffnet sich direkt die bekannte Oberfläche.</p>
         <div class="field"><label>Fraktions Benutzername</label><input type="text" id="factionUsername" placeholder="Benutzername"></div>
         <div class="field"><label>Fraktions Passwort</label><input type="password" id="factionPassword" placeholder="Passwort"></div>
@@ -726,5 +732,37 @@
     openSettingsTab('logs');
     renderAll();
   </script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCrK57JuddZ50Y68ZAF5bOqwDpJaar388U",
+  authDomain: "fraktion-panel.firebaseapp.com",
+  projectId: "fraktion-panel",
+  storageBucket: "fraktion-panel.firebasestorage.app",
+  messagingSenderId: "619076177928",
+  appId: "1:619076177928:web:91d0ff211ccb865dbe81bd"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Fraktion erstellen
+window.createFraktion = async function(name) {
+  if (!name) {
+    alert("Bitte Name eingeben");
+    return;
+  }
+
+  await addDoc(collection(db, "fraktionen"), {
+    name: name,
+    createdAt: Date.now(),
+    members: []
+  });
+
+  alert("Fraktion erstellt!");
+};
+</script>
 </body>
 </html>
